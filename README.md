@@ -8,25 +8,34 @@ HireHive runs the whole Open House in one system, instead of Excel sheets, paper
 
 ### V1: Open House management
 
-18 features, 94 functional and 40 non-functional requirements.
-
-- Registration and login with a Riphah email
-- Volunteer selection and task tracking
-- FYP team and project registration
-- Automatic table numbers and printable tags
-- Seminar attendance, LCD issue and return
-- QR check-in for companies
-- Job fair, FYP exhibition and AI project matching
-- Notifications, certificates and reports
+1. User Registration and Login
+2. User Management and Roles
+3. Profile and CV Management
+4. Event Management
+5. FYP Team and Project Registration
+6. Volunteer Registration and Selection
+7. Company Registration and Invitation
+8. Table Allocation and Tags
+9. Seminar and Attendance
+10. LCD Issue and Return
+11. QR Code and Check-in
+12. Job Fair and Interview Management
+13. FYP Exhibition and Evaluation
+14. Volunteer Task Management and Tracking
+15. Search and AI Matching
+16. Notifications and Announcements
+17. Certificates
+18. Analytics and Reports
 
 ### V2: adds alumni, mock interviews and WhatsApp
 
-25 features, 163 functional and 56 non-functional requirements.
-
-- **Alumni:** separate registration and dashboard to interview selected students and give feedback
-- **Mock interview:** the system ranks and selects students by department, and notifies them
-- **WhatsApp intake:** reads selected company conversations through the official WhatsApp Business integration and extracts hiring requirements
-- **Student suggestion:** matches those requirements with student CVs and suggests the best students to the admin
+19. Alumni Registration and Login
+20. Student Selection for Mock Interview
+21. Mock Interview Notifications
+22. Alumni Dashboard and Student CV Access
+23. Alumni Feedback and Review
+24. WhatsApp Message Intake
+25. Requirement-Based Student Suggestion
 
 ## Documents
 
@@ -35,4 +44,6 @@ HireHive runs the whole Open House in one system, instead of Excel sheets, paper
 
 ## Team
 
-Nimra Tariq, Simaab Malik, Wafa Aadil. Supervisor: Ms. Tazzaina Malik.
+Simaab Malik, Nimra Tariq, Wafa Aadil. 
+
+Supervisor: Ms. Tazzaina Malik.
