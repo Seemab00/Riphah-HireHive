@@ -1,0 +1,11 @@
+/* These three lines load Tailwind's styles. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Page background, text color and font for the whole site. */
+body {
+  background: #f6f8fa;
+  color: #12212b;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+}
