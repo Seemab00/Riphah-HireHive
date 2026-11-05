@@ -89,6 +89,18 @@ export type Feedback = {
   comment: string;
   date: string;
 };
+// Mock interview scheduled with an alumnus.
+export type MockInterview = {
+  id: number;
+  teamId: number;
+  alumniEmail: string;
+  slot: string;
+  meetingLink?: string;
+  status: "Scheduled" | "Done";
+  score?: number;
+  recommendation?: "Ready" | "Needs improvement" | "Not ready";
+  comment?: string;
+};
 
 // "This company is interested in this team's project."
 export type Interest = { company: string; teamId: number };
@@ -103,4 +115,5 @@ export const KEYS = {
   feedback: "hirehive_feedback",
   interests: "hirehive_interests",
   checkins: "hirehive_checkins",
+  mockInterviews: "hirehive_mock_interviews",
 };

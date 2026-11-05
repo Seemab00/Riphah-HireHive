@@ -22,6 +22,7 @@ export default function ProfilePage() {
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setMessage("Enter a valid email address."); return; }
+    if (!user) return;
     if (needsSapEmail(user.role) && email.trim().toLowerCase() !== `${user.sapId}${SAP_DOMAIN}`) { setMessage(`This role must use its SAP email: ${user.sapId}${SAP_DOMAIN}`); return; }
     if (currentPassword || newPassword || confirmPassword) {
       if (currentPassword !== user.password) { setMessage("Current password is incorrect."); return; }
@@ -43,7 +44,21 @@ export default function ProfilePage() {
     if (file.size > 2 * 1024 * 1024) { setMessage("Please choose a CV smaller than 2 MB for this local demo."); return; }
     if (!/\.(pdf|doc|docx)$/i.test(file.name)) { setMessage("Upload a PDF, DOC, or DOCX file."); return; }
     const reader = new FileReader();
-    reader.onload = () => { updateAccount(user.email, { cvName: file.name, cvDataUrl: String(reader.result), cvVisible }); setUser({ ...user, cvName: file.name, cvDataUrl: String(reader.result) }); setMessage("CV saved in this browser demo."); };
+    if (!user) return;
+    const currentUser = user;
+    reader.onload = () => {
+  updateAccount(currentUser.email, {
+    cvName: file.name,
+    cvDataUrl: String(reader.result),
+    cvVisible
+  });
+  setUser({
+    ...currentUser,
+    cvName: file.name,
+    cvDataUrl: String(reader.result)
+  });
+  setMessage("CV saved in this browser demo.");
+};
     reader.readAsDataURL(file);
   }
   return <main className="mx-auto max-w-3xl space-y-6 p-6 md:p-10">
