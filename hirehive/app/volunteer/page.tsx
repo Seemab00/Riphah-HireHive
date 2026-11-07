@@ -18,6 +18,18 @@ export default function VolunteerHome() {
 
   const status = user?.volunteerStatus ?? "Pending";
 
+  // The three review steps, in order. Each step has one decision saved in the account.
+  const steps = ["Student Coordinator", "Faculty Coordinator", "FYP Incharge"];
+  const decisions = user?.volunteerStageDecisions ?? ["Pending", "Pending", "Pending"];
+
+  // Chip color for one decision: Pending yellow, Recommended blue, Selected green, Rejected red.
+  function decisionColor(value: string): "green" | "yellow" | "red" | "blue" {
+    if (value === "Selected") return "green";
+    if (value === "Recommended") return "blue";
+    if (value === "Rejected") return "red";
+    return "yellow";
+  }
+
   return (
     <RoleGuard role="volunteer">
       <TopBar links={[{ label: "My duties", href: "/volunteer" }]} />
@@ -35,6 +47,18 @@ export default function VolunteerHome() {
           {status === "Rejected" && (
             <p className="mt-3 text-sm text-muted">Your application was not selected this time.</p>
           )}
+        </Card>
+
+        <Card title="Selection progress">
+          <p className="mb-3 text-sm text-muted">Your application is reviewed in three steps.</p>
+          <div className="space-y-2">
+            {steps.map((step, index) => (
+              <div key={step} className="flex items-center justify-between rounded-lg bg-surface px-4 py-3 text-sm">
+                <span><b>Step {index + 1}:</b> {step}</span>
+                <Chip color={decisionColor(decisions[index] ?? "Pending")}>{decisions[index] ?? "Pending"}</Chip>
+              </div>
+            ))}
+          </div>
         </Card>
 
         {/* Duties are shown only after the admin approves the volunteer. */}
