@@ -17,8 +17,11 @@ function validKey(key: string) {
 
 // Accounts ki list: har role ko sirf wo dikhao jo us ke kaam ka hai.
 function visibleAccounts(s: Session, all: ReturnType<typeof toAccount>[]) {
-  if (s.role === "admin" || s.role === "coordinator") return all;
-  const strip = (a: any) => { const { cvDataUrl, ...rest } = a; return rest; };
+  if (s.role === "admin") return all;
+  const strip = (a: any) => { const { cvDataUrl, password, ...rest } = a; return rest; };
+  if (s.role === "coordinator") return all
+    .filter((a: any) => a.email === s.email || a.role === "volunteer")
+    .map(strip);
   return all
     .filter((a: any) => {
       if (a.email === s.email || a.role === "company") return true;
@@ -35,6 +38,10 @@ export async function GET(_req: Request, { params }: { params: { key: string } }
   if (!validKey(params.key)) return NextResponse.json({ error: "Bad key." }, { status: 400 });
 
   if (params.key === ACCOUNTS) {
+    if (s.role === "coordinator") {
+      const { data: coordinator } = await db().from("accounts").select("data").eq("email", s.email).maybeSingle();
+      if (coordinator?.data?.coordinatorLevel !== "student") return NextResponse.json({ error: "Student Coordinator access only." }, { status: 403 });
+    }
     const { data } = await db().from("accounts").select("*");
     const all = ((data ?? []) as AccountRow[]).map(toAccount);
     return NextResponse.json({ value: visibleAccounts(s, all) });
@@ -52,9 +59,13 @@ export async function PUT(req: Request, { params }: { params: { key: string } })
 
   if (params.key === ACCOUNTS) {
     if (s.role !== "admin" && s.role !== "coordinator") return NextResponse.json({ error: "Not allowed." }, { status: 403 });
+    if (s.role === "coordinator") {
+      const { data: coordinator } = await db().from("accounts").select("data").eq("email", s.email).maybeSingle();
+      if (coordinator?.data?.coordinatorLevel !== "student") return NextResponse.json({ error: "Student Coordinator access only." }, { status: 403 });
+    }
     if (!Array.isArray(body.value)) return NextResponse.json({ error: "Expected a list." }, { status: 400 });
 
-    const { data: existing } = await db().from("accounts").select("email, role, password_hash, must_change_password");
+    const { data: existing } = await db().from("accounts").select("email, role, password_hash, must_change_password, data");
     const byEmail = new Map((existing ?? []).map((r: any) => [r.email, r]));
     const rows: Record<string, unknown>[] = [];
 
@@ -64,6 +75,22 @@ export async function PUT(req: Request, { params }: { params: { key: string } })
       const old: any = byEmail.get(email);
       if (!old && role === "admin") continue;                       // API se naya admin nahi ban sakta
       if (old?.role === "admin" && s.role !== "admin") continue;    // coordinator admin ko nahi chhoo sakta
+
+      // Student Coordinator may only move a pending volunteer to the next review stage
+      // or reject at stage 1. Other account fields and all other accounts stay untouched.
+      if (s.role === "coordinator") {
+        if (!old || old.role !== "volunteer" || (old.data?.volunteerStage ?? 1) !== 1) continue;
+        const nextStage = data?.volunteerStage;
+        const decisions = data?.volunteerStageDecisions;
+        const decision = Array.isArray(decisions) ? decisions[0] : null;
+        const isRecommendation = nextStage === 2 && decision === "Recommended" && data?.volunteerStatus === "Pending";
+        const isRejection = nextStage === -1 && decision === "Rejected" && data?.volunteerStatus === "Rejected";
+        if (!isRecommendation && !isRejection) continue;
+        const safeData = { ...(old.data ?? {}), volunteerStage: nextStage, volunteerStageDecisions: decisions, volunteerStatus: data.volunteerStatus };
+        rows.push({ email: old.email, name: old.name, data: safeData, role: "volunteer", password_hash: old.password_hash, must_change_password: old.must_change_password });
+        continue;
+      }
+
       // Page ne naya plain password diya (jaise Staff page) to hash karo, warna purana hash rakho.
       const hash = a.password ? await bcrypt.hash(String(a.password), 10) : old?.password_hash;
       if (!hash) continue;
