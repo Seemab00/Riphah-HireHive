@@ -12,13 +12,14 @@ import { getUser } from "@/lib/auth";
 import { useTeams } from "@/lib/useTeams";
 import { useStore } from "@/lib/useStore";
 import { assignTables } from "@/lib/tables";
-import { KEYS, LcdRequest } from "@/lib/data";
+import { KEYS, LcdRequest, MockInterview } from "@/lib/data";
 
 export default function FypHome() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const { teams, addTeam, removeTeam } = useTeams();
   const [lcds, setLcds] = useStore<LcdRequest[]>(KEYS.lcd, []);
+  const [interviews] = useStore<MockInterview[]>(KEYS.mockInterviews, []); // mock interviews assigned by the admin
 
   // LCD form boxes.
   const [reason, setReason] = useState("");
@@ -38,6 +39,17 @@ export default function FypHome() {
   const myTeam = teams.find((t) => t.ownerEmail === email);
   const tableNumbers = assignTables(teams);
   const myTable = myTeam ? tableNumbers[myTeam.id] : undefined;
+
+  // Mock interviews of MY team only.
+  const myInterviews = myTeam ? interviews.filter((i) => i.teamId === myTeam.id) : [];
+
+  // Chip color for the alumnus recommendation.
+  function recommendationColor(value?: string): "green" | "yellow" | "red" | "blue" {
+    if (value === "Ready") return "green";
+    if (value === "Needs improvement") return "yellow";
+    if (value === "Not ready") return "red";
+    return "blue";
+  }
 
   // My LCD requests. A new request is possible only when none is waiting or approved.
   const myLcds = myTeam ? lcds.filter((l) => l.teamId === myTeam.id) : [];
@@ -118,6 +130,42 @@ export default function FypHome() {
               )}
             </Card>
           </div>
+        )}
+
+        {/* Mock interview: shown after the team is registered. Before the interview we show the slot and link; after it, the feedback. */}
+        {myTeam && (
+          <Card title="Mock interview">
+            {myInterviews.length === 0 && (
+              <p className="text-sm text-muted">No mock interview has been assigned yet.</p>
+            )}
+            <div className="space-y-4">
+              {myInterviews.map((i) => (
+                <div key={i.id} className="rounded-lg bg-surface p-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span><b>Alumnus:</b> {i.alumniEmail}</span>
+                    <span><b>Slot:</b> {i.slot}</span>
+                    <Chip color={i.status === "Done" ? "green" : "blue"}>{i.status}</Chip>
+                    {i.meetingLink && (
+                      <a href={i.meetingLink} target="_blank" rel="noreferrer" className="font-semibold text-brand underline">
+                        Join
+                      </a>
+                    )}
+                  </div>
+
+                  {/* The feedback appears only after the alumnus marks the interview as Done. */}
+                  {i.status === "Done" && (
+                    <div className="mt-3 space-y-2 border-t border-line pt-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span><b>Score:</b> {i.score ?? "-"} / 5</span>
+                        {i.recommendation && <Chip color={recommendationColor(i.recommendation)}>{i.recommendation}</Chip>}
+                      </div>
+                      {i.comment && <p><b>Comment:</b> {i.comment}</p>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
         )}
 
         {/* LCD request: possible only for an approved team. */}
