@@ -19,22 +19,20 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   useEffect(() => { const current = getUser(); if (!current) router.replace("/login"); else { setUser(current); setName(current.name); setEmail(current.email); setCvVisible(!!current.cvVisible); } }, [router]);
   if (!user) return null;
-  function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setMessage("Enter a valid email address."); return; }
     if (!user) return;
     if (needsSapEmail(user.role) && email.trim().toLowerCase() !== `${user.sapId}${SAP_DOMAIN}`) { setMessage(`This role must use its SAP email: ${user.sapId}${SAP_DOMAIN}`); return; }
     if (currentPassword || newPassword || confirmPassword) {
-      if (currentPassword !== user.password) { setMessage("Current password is incorrect."); return; }
+      if (!currentPassword) { setMessage("Enter your current password."); return; }
       if (newPassword.length < 8) { setMessage("New password must have at least 8 characters."); return; }
       if (newPassword !== confirmPassword) { setMessage("New password and confirmation do not match."); return; }
     }
-    const other = (JSON.parse(localStorage.getItem("hirehive_accounts") || "[]") as Account[]).some(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.email.toLowerCase() !== user!.email.toLowerCase());
-    if (other) { setMessage("That email is already in use."); return; }
+    if (email.trim().toLowerCase() !== user.email.toLowerCase()) { setMessage("Email cannot be changed yet."); return; }
     const changes: Partial<Account> = { name: name.trim(), email: email.trim().toLowerCase(), cvVisible };
     if (newPassword) changes.password = newPassword;
-    updateAccount(user.email, changes);
-    localStorage.setItem("hirehive_session", email.trim().toLowerCase());
+    const err = await updateAccount(user.email, { ...changes, currentPassword }); if (err) { setMessage(err); return; }
     setUser({ ...user, ...changes });
     setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     setMessage(newPassword ? "Profile and password updated in this browser." : "Profile updated in this browser.");

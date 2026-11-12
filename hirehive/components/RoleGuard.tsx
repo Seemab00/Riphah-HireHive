@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUser, homeFor, logout } from "@/lib/auth";
+import { refreshUser, homeFor, logout } from "@/lib/auth";
 import { Account, Role, ROLE_LABELS } from "@/lib/data";
 
 // Wrap a page with this to protect it.
@@ -22,15 +22,17 @@ export default function RoleGuard({
   const [user, setUser] = useState<Account | null>(null);
 
   useEffect(() => {
-    const current = getUser();
-    if (!current) {
-      router.replace("/login");
-    } else if (current.role === role) {
-      setState("allowed");
-    } else {
-      setUser(current);
-      setState("denied");
-    }
+    // Server se poochho: cookie abhi bhi valid hai? (sirf browser ke cache par bharosa nahi)
+    refreshUser().then((current) => {
+      if (!current) {
+        router.replace("/login");
+      } else if (current.role === role) {
+        setState("allowed");
+      } else {
+        setUser(current);
+        setState("denied");
+      }
+    });
   }, [role, router]);
 
   // While we check, show nothing (this avoids a flash of the protected page).

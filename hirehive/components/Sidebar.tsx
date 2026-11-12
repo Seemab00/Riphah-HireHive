@@ -19,6 +19,7 @@ const links = [
   { label: "LCD report", href: "/admin/lcd" },
   { label: "Event setup", href: "/admin/event" },
   { label: "Alumni feedback", href: "/admin/feedback" },
+  { label: "Email outbox", href: "/admin/outbox" },
 ];
 
 // The teal menu on the left side of every admin page.

@@ -24,7 +24,7 @@ export default function SignUpPage() {
   // Students and volunteers must use their SAP email. Other roles can use any email.
   const sapRole = needsSapEmail(role);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     // Check 1: no empty boxes.
@@ -59,7 +59,7 @@ export default function SignUpPage() {
     }
 
     // Try to create the account. It fails if the email is already used.
-    const problem = register({
+    const problem = await register({
       name: name.trim(),
       email: email,
       password: password,
