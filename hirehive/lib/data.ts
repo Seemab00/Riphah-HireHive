@@ -34,6 +34,11 @@ export type Account = {
   email: string;
   password: string;           // saved as plain text ONLY because this is a front end showcase
   role: Role;
+  companyDescription?: string;
+  companyWebsite?: string;
+  companyIndustry?: string;
+  companyContact?: string;
+  boothNumber?: string;
   sapId?: string;             // students and volunteers only
   program?: Program;          // students and volunteers only
   volunteerStatus?: Status;   // volunteers only: waiting for the admin, approved or rejected
@@ -78,6 +83,16 @@ export type LcdRequest = {
 
 // The open house details that the admin enters. Everyone sees them.
 export type EventInfo = { name: string; date: string; venue: string; deadline: string };
+export type CompanyInvitation = {
+  id: string;
+  companyName: string;
+  email: string;
+  status: "Approved" | "Rejected" | "Invitation Sent" | "Registered";
+  invitationToken: string;
+  createdAt: string;
+  acceptedAt?: string;
+  boothNumber?: string;
+};
 export const emptyEvent: EventInfo = { name: "", date: "", venue: "", deadline: "" };
 
 // Feedback written by an alumnus.
@@ -104,7 +119,22 @@ export type MockInterview = {
 
 // "This company is interested in this team's project."
 export type Interest = { company: string; teamId: number };
-
+export type CompanyNotification = {
+  id: string;
+  company: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+};
+export type VolunteerNotification = {
+  id: string;
+  volunteer: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+};
 // The names under which each list is saved in the browser (localStorage).
 export const KEYS = {
   accounts: "hirehive_accounts",
@@ -116,4 +146,7 @@ export const KEYS = {
   interests: "hirehive_interests",
   checkins: "hirehive_checkins",
   mockInterviews: "hirehive_mock_interviews",
+  companyInvitations: "hirehive_company_invitations",
+  companyNotifications: "hirehive_company_notifications",
+  volunteerNotifications: "hirehive_volunteer_notifications",
 };
