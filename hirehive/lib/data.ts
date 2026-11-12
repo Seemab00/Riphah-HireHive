@@ -49,6 +49,7 @@ export type Account = {
   volunteerStageDecisions?: string[];
   volunteerExperience?: string;
   taskChecklist?: string[];
+  mustChangePassword?: boolean;
 };
 
 // One FYP team registration.

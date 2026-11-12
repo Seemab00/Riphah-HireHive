@@ -1,30 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// A "hook" is reusable page logic. This one works like useState, but it also
-// saves the value in the browser (localStorage), so the data is still there after a refresh
-// and every page can read it.
+// Pehle jaisa hi: const [value, update, loaded] = useStore<T>(key, initial);
+// Ab data browser me nahi, database me hai: GET/PUT /api/data/[key].
 //
-// Usage:  const [teams, setTeams, loaded] = useStore<Team[]>("hirehive_teams", []);
-//   teams    -> the current value
-//   setTeams -> call it with a new value to change AND save it
-//   loaded   -> false for a split second, then true once the saved data was read
+// Internet na ho ya demo fallback chahiye to .env.local me NEXT_PUBLIC_STORE_MODE=local likho:
+// tab purani localStorage wali tarah chalta hai.
+const LOCAL = process.env.NEXT_PUBLIC_STORE_MODE === "local";
+
 export function useStore<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(initial);
   const [loaded, setLoaded] = useState(false);
+  const initialRef = useRef(initial);
 
-  // When the page opens, read the saved value (if there is one).
   useEffect(() => {
-    const saved = localStorage.getItem(key);
-    if (saved) setValue(JSON.parse(saved) as T);
-    setLoaded(true);
+    let cancelled = false;
+    async function load() {
+      try {
+        if (LOCAL) {
+          const saved = localStorage.getItem(key);
+          if (saved && !cancelled) setValue(JSON.parse(saved) as T);
+        } else {
+          const res = await fetch(`/api/data/${key}`, { cache: "no-store" });
+          if (res.ok) {
+            const { value: v } = await res.json();
+            if (v !== null && v !== undefined && !cancelled) setValue(v as T);
+          }
+          // 401 (login nahi) ya error: initial value rehti hai, page crash nahi hota.
+        }
+      } catch (e) {
+        console.error("useStore load failed:", key, e);
+      }
+      if (!cancelled) setLoaded(true);
+    }
+    load();
+    return () => { cancelled = true; };
   }, [key]);
 
-  // Change the value on the page and save it in the browser.
+  // Page par foran badlo (optimistic), phir database me save karo.
   function update(next: T) {
     setValue(next);
-    localStorage.setItem(key, JSON.stringify(next));
+    if (LOCAL) {
+      localStorage.setItem(key, JSON.stringify(next));
+      return;
+    }
+    fetch(`/api/data/${key}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: next }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const msg = (await res.json().catch(() => ({}))).error ?? res.statusText;
+          console.error("useStore save failed:", key, msg);
+          // Save fail hua to database wali asli value wapas lao, taake screen jhooth na bole.
+          const back = await fetch(`/api/data/${key}`, { cache: "no-store" });
+          if (back.ok) { const { value: v } = await back.json(); setValue((v ?? initialRef.current) as T); }
+        }
+      })
+      .catch((e) => console.error("useStore save failed:", key, e));
   }
 
   return [value, update, loaded] as const;

@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState(""); // the red message under the form
 
   // This runs when the person presses "Sign in".
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault(); // stop the browser from reloading the page
 
     if (email.trim() === "" || password === "") {
@@ -25,7 +25,7 @@ export default function LoginPage() {
     }
 
     // Check the email and password against the saved accounts.
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.error || !result.account) {
       setError(result.error ?? "Could not sign in.");
       return;
@@ -66,8 +66,7 @@ export default function LoginPage() {
             Sign in
           </button>
 
-          <p className="text-center text-sm text-muted">First time setting up this demo? <Link href="/setup-admin" className="text-brand underline">Create initial Admin</Link></p>
-          <p className="text-center text-sm text-muted">
+                    <p className="text-center text-sm text-muted">
             New here? <Link href="/signup" className="text-brand underline">Create an account</Link>
           </p>
         </form>
