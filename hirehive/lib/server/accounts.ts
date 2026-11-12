@@ -12,8 +12,21 @@ export type AccountRow = {
 export const cleanEmail = (e: unknown) => String(e ?? "").trim().toLowerCase();
 
 // DB row -> front-end Account (password hash kabhi nahi jata).
-export function toAccount(r: AccountRow) {
-  return { ...r.data, email: r.email, role: r.role, name: r.name, mustChangePassword: r.must_change_password };
+export function toAccount(
+  r: AccountRow
+): Record<string, unknown> & {
+  email: string;
+  role: string;
+  name: string;
+  mustChangePassword: boolean;
+} {
+  return {
+    ...r.data,
+    email: r.email,
+    role: r.role,
+    name: r.name,
+    mustChangePassword: r.must_change_password,
+  };
 }
 
 // Front-end Account -> (email, role, name, baqi fields data me).

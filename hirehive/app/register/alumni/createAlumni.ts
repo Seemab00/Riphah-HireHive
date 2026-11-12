@@ -45,7 +45,7 @@ export async function createAlumniAccount(form: AlumniForm): Promise<{ error?: s
     attendedBefore: form.attendedBefore,
   };
 
-  const problem = register(account); // "register" also logs the new person in...
+  const problem = await register(account); // "register" also logs the new person in...
   if (problem) return { error: problem };
 
   logout(); // ...but the plan says: they get an email and then log in themselves. So log out again.
