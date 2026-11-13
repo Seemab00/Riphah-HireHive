@@ -118,7 +118,7 @@ useEffect(() => {
 
       setTimeout(() => {
         router.push(homeFor("company"));
-      }, 1200);
+      }, 2500);
     } catch {
       setError("Something went wrong. Please try again.");
     }
@@ -235,7 +235,11 @@ useEffect(() => {
           )}
 
           {success && (
-            <p className="rounded-lg bg-green-50 p-3 text-sm font-semibold text-green-700">
+            <p
+  role="status"
+  aria-live="polite"
+  className="rounded-lg bg-green-50 p-3 text-sm font-semibold text-green-700"
+>
               Account activated! Redirecting to your dashboard...
             </p>
           )}
