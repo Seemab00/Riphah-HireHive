@@ -21,6 +21,7 @@ const volunteerTasks = [
 
 export default function VolunteerHome() {
   const [user, setUser] = useState<Account | null>(null);
+  const [userLoaded, setUserLoaded] = useState(false);
   const [notifications, setNotifications] = useState<VolunteerNotification[]>([]);
 const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
@@ -46,8 +47,9 @@ function markAsRead(id: string) {
 const unreadCount = myNotifications.filter((n) => !n.read).length;
 
   useEffect(() => {
-    setUser(getUser());
-  }, []);
+  setUser(getUser());
+  setUserLoaded(true);
+}, []);
 
   const status = user?.volunteerStatus ?? "Pending";
   const steps = ["Student Coordinator", "Faculty Coordinator", "FYP Incharge"];
@@ -96,6 +98,12 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
           <h1 className="text-3xl font-bold">My duties</h1>
           <p className="text-sm text-muted">Hello, {user?.name}</p>
         </div>
+        {!userLoaded ? (
+  <Card title="Application status">
+    <p className="text-sm text-muted">Loading application details...</p>
+  </Card>
+) : (
+  <>
 
         <Card title="Application status">
           <Chip color={statusColor(status)}>{status}</Chip>
@@ -135,6 +143,8 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
             ))}
           </div>
         </Card>
+          </>
+)}
 
         {status === "Approved" && (
           <>
