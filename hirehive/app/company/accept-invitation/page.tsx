@@ -13,6 +13,7 @@ export default function AcceptInvitationPage() {
   const searchParams = useSearchParams();
 
   const token = searchParams.get("token") ?? "";
+  const [invitation, setInvitation] = useState<CompanyInvitation | null>(null);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
