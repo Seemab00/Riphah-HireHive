@@ -117,11 +117,13 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
 
         <EventCard />
         <Card title={`Notifications (${unreadCount} unread)`}>
-  {myNotifications.length === 0 ? (
-    <p className="text-sm text-muted">
-      No notifications yet. Updates from HireHive will appear here.
-    </p>
-  ) : (
+  {!notificationsLoaded ? (
+  <p className="text-sm text-muted">Loading notifications...</p>
+) : myNotifications.length === 0 ? (
+  <p className="text-sm text-muted">
+    No notifications yet. Updates from HireHive will appear here.
+  </p>
+) : (
     <div className="space-y-3">
       {myNotifications.map((notification) => (
         <div
