@@ -25,7 +25,7 @@ export default function CompanyHome() {
   const [search, setSearch] = useState("");
   const { teams } = useTeams();
   const [interests, setInterests, interestsLoaded] = useStore<Interest[]>(KEYS.interests, []);
-  const [accounts] = useStore<Account[]>(KEYS.accounts, []);
+const [accounts, , accountsLoaded] = useStore<Account[]>(KEYS.accounts, []);
 const [notifications, setNotifications] = useStore<CompanyNotification[]>(
   KEYS.companyNotifications,
   []
@@ -223,9 +223,62 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
   </Card>
 )}
         <Card title="Student CVs shared with companies">
-          <p className="mb-3 text-sm text-muted">Only CVs whose owner has enabled company visibility appear here. This prototype stores CV files in the browser.</p>
-          <div className="space-y-2">{accounts.filter(a => (a.role === "fyp" || a.role === "student") && a.cvVisible && a.cvName).map(a => <div key={a.email} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3 text-sm"><div><p className="font-semibold">{a.name}</p><p className="text-xs text-muted">{a.program || "Program not supplied"} · {a.cvName}</p></div>{a.cvDataUrl ? <a className="text-brand underline" href={a.cvDataUrl} download={a.cvName}>Open CV</a> : <span className="text-xs text-muted">Filename only; re-upload via profile to store file</span>}</div>)}{accounts.filter(a => (a.role === "fyp" || a.role === "student") && a.cvVisible && a.cvName).length === 0 && <p className="text-sm text-muted">No students have shared a CV yet.</p>}</div>
-        </Card>
+  <p className="mb-3 text-sm text-muted">
+    Only CVs whose owner has enabled company visibility appear here. This prototype stores CV files in the browser.
+  </p>
+
+  {!accountsLoaded ? (
+    <p className="text-sm text-muted">Loading shared CVs...</p>
+  ) : (
+    <div className="space-y-2">
+      {accounts
+        .filter(
+          (a) =>
+            (a.role === "fyp" || a.role === "student") &&
+            a.cvVisible &&
+            a.cvName
+        )
+        .map((a) => (
+          <div
+            key={a.email}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3 text-sm"
+          >
+            <div>
+              <p className="font-semibold">{a.name}</p>
+              <p className="text-xs text-muted">
+                {a.program || "Program not supplied"} · {a.cvName}
+              </p>
+            </div>
+
+            {a.cvDataUrl ? (
+              <a
+                className="text-brand underline"
+                href={a.cvDataUrl}
+                download={a.cvName}
+              >
+                Open CV
+              </a>
+            ) : (
+              <span className="text-xs text-muted">
+                Filename only; re-upload via profile to store file
+              </span>
+            )}
+          </div>
+        ))}
+
+      {accounts.filter(
+        (a) =>
+          (a.role === "fyp" || a.role === "student") &&
+          a.cvVisible &&
+          a.cvName
+      ).length === 0 && (
+        <p className="text-sm text-muted">
+          No students have shared a CV yet.
+        </p>
+      )}
+    </div>
+  )}
+</Card>
 
         <Card>
           <Field label="Search projects" value={search} onChange={setSearch} placeholder="Technology, skill or program" />
