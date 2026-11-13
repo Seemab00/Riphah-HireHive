@@ -245,7 +245,7 @@ useEffect(() => {
             disabled={!token || !invitation || success}
             className="w-full rounded-lg bg-brand py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Activate Company Account
+            {success ? "Account Activated" : "Activate Company Account"}
           </button>
 
           <p className="text-center text-sm text-muted">
