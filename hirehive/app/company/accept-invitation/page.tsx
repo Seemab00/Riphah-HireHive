@@ -114,10 +114,9 @@ setIsSubmitting(true);
         KEYS.companyInvitations,
         JSON.stringify(updatedInvitations)
       );
-      setPassword("");
+            setPassword("");
+      setConfirmPassword("");
       setShowPassword(false);
-setConfirmPassword("");
-setShowPassword(false);
 
       setSuccess(true);
 
