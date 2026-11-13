@@ -42,8 +42,12 @@ const myNotifications = notifications.filter(
 );
 
 function markAsRead(id: string) {
+  const email = (user?.email || "").trim().toLowerCase();
+
   const updated = notifications.map((n) =>
-    n.id === id ? { ...n, read: true } : n
+    n.id === id && n.volunteer.trim().toLowerCase() === email
+      ? { ...n, read: true }
+      : n
   );
 
   setNotifications(updated);
