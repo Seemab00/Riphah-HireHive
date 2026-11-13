@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -19,7 +19,25 @@ export default function AcceptInvitationPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+useEffect(() => {
+  if (!token) return;
 
+  try {
+    const invitations = JSON.parse(
+      localStorage.getItem(KEYS.companyInvitations) ?? "[]"
+    ) as CompanyInvitation[];
+
+    const foundInvitation = invitations.find(
+      (item) =>
+        item.invitationToken === token &&
+        item.status === "Invitation Sent"
+    );
+
+    setInvitation(foundInvitation ?? null);
+  } catch {
+    setInvitation(null);
+  }
+}, [token]);
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
