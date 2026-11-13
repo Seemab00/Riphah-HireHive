@@ -115,7 +115,9 @@ useEffect(() => {
         JSON.stringify(updatedInvitations)
       );
       setPassword("");
+      setShowPassword(false);
 setConfirmPassword("");
+setShowPassword(false);
 
       setSuccess(true);
 
