@@ -96,7 +96,9 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
       <main className="space-y-6 p-6 md:px-12">
         <div>
           <h1 className="text-3xl font-bold">My duties</h1>
-          <p className="text-sm text-muted">Hello, {user?.name}</p>
+          <p className="text-sm text-muted">
+  {userLoaded ? `Hello, ${user?.name ?? ""}` : "Loading profile..."}
+</p>
         </div>
         {!userLoaded ? (
   <Card title="Application status">
