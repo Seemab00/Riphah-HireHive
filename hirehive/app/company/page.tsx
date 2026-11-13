@@ -174,13 +174,6 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
       </div>
 
       <div>
-        <p className="text-xs text-muted">Website</p>
-        <p className="font-semibold">
-          {company.companyWebsite || "Not provided"}
-        </p>
-      </div>
-
-      <div>
   <p className="text-xs text-muted">Website</p>
   {company.companyWebsite?.trim() ? (
     <a
