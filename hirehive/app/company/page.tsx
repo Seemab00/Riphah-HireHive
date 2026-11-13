@@ -70,20 +70,41 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
   );
 
   // Is this project in my "Interested" list?
+   // Normalize email so uppercase/lowercase differences do not affect matching.
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Check whether this company is interested in a project.
   function isInterested(teamId: number): boolean {
-    return interests.some((i) => i.company === email && i.teamId === teamId);
+    return interests.some(
+      (i) =>
+        i.company.trim().toLowerCase() === normalizedEmail &&
+        i.teamId === teamId
+    );
   }
 
-  // Add the project to my list, or remove it when it is already there.
+  // Add or remove a project from this company's interest list.
   function toggle(teamId: number) {
     if (isInterested(teamId)) {
-      setInterests(interests.filter((i) => !(i.company === email && i.teamId === teamId)));
+      setInterests(
+        interests.filter(
+          (i) =>
+            !(
+              i.company.trim().toLowerCase() === normalizedEmail &&
+              i.teamId === teamId
+            )
+        )
+      );
     } else {
-      setInterests([...interests, { company: email, teamId: teamId }]);
+      setInterests([
+        ...interests,
+        { company: normalizedEmail, teamId: teamId },
+      ]);
     }
   }
 
-  const myCount = interests.filter((i) => i.company === email).length;
+  const myCount = interests.filter(
+    (i) => i.company.trim().toLowerCase() === normalizedEmail
+  ).length;
 
   return (
     <RoleGuard role="company">
