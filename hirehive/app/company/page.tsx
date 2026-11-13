@@ -31,14 +31,17 @@ const [notifications, setNotifications] = useStore<CompanyNotification[]>(
   []
 );
 
+const normalizedEmail = email.trim().toLowerCase();
+
 const myNotifications = notifications.filter(
-  (n) => n.company.toLowerCase() === email.toLowerCase()
+  (n) => n.company.trim().toLowerCase() === normalizedEmail
 );
 
 function markAsRead(id: string) {
   setNotifications(
     notifications.map((n) =>
-      n.id === id && n.company.toLowerCase() === email.toLowerCase()
+      n.id === id &&
+      n.company.trim().toLowerCase() === normalizedEmail
         ? { ...n, read: true }
         : n
     )
@@ -71,7 +74,6 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
 
   // Is this project in my "Interested" list?
    // Normalize email so uppercase/lowercase differences do not affect matching.
-  const normalizedEmail = email.trim().toLowerCase();
 
   // Check whether this company is interested in a project.
   function isInterested(teamId: number): boolean {
