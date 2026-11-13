@@ -198,6 +198,9 @@ useEffect(() => {
               required
               minLength={8}
             />
+            <p className="mt-1 text-xs text-muted">
+  Password must contain at least 8 characters.
+</p>
           </div>
 
           <div>
