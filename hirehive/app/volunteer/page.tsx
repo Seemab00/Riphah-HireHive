@@ -22,10 +22,12 @@ const volunteerTasks = [
 export default function VolunteerHome() {
   const [user, setUser] = useState<Account | null>(null);
   const [notifications, setNotifications] = useState<VolunteerNotification[]>([]);
+const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
 useEffect(() => {
   const saved = localStorage.getItem(KEYS.volunteerNotifications);
   setNotifications(saved ? JSON.parse(saved) : []);
+  setNotificationsLoaded(true);
 }, []);
 
 const myNotifications = notifications.filter(
