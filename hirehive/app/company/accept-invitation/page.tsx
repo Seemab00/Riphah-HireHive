@@ -180,6 +180,12 @@ useEffect(() => {
               No invitation token was provided. Please open the link from your invitation email.
             </p>
           )}
+          {token && !invitation && (
+  <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+    This invitation is invalid, expired, or has already been used.
+    Please contact the HireHive administration team.
+  </p>
+)}
 
           <div>
             <label className="mb-1 block text-sm font-medium">Password</label>
