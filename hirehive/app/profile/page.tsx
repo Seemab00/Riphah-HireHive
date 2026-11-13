@@ -90,6 +90,9 @@ if (user.role === "company") {
 });
   setMessage("CV saved in this browser demo.");
 };
+reader.onerror = () => {
+  setMessage("Could not read the CV file. Please try again.");
+};
     reader.readAsDataURL(file);
   }
   return <main className="mx-auto max-w-3xl space-y-6 p-6 md:p-10">
