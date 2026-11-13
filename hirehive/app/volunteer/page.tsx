@@ -152,19 +152,19 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
           <>
           {userLoaded ? (
             <Card title="Your placement">
-              {user?.placement ? (
-                <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold">{user.placement}</p>
-                  <p>
-                    <b>Shift:</b> {user.shift || "Not set yet"}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted">
-                  The admin has not given you a placement yet.
-                </p>
-              )}
-            </Card>
+  {user?.placement ? (
+    <div className="space-y-1 text-sm">
+      <p className="text-lg font-bold">{user.placement}</p>
+      <p>
+        <b>Shift:</b> {user.shift || "Not set yet"}
+      </p>
+    </div>
+  ) : (
+    <p className="text-sm text-muted">
+      The admin has not given you a placement yet.
+    </p>
+  )}
+</Card>
             ) : (
   <Card title="Your placement">
     <p className="text-sm text-muted">Loading placement details...</p>
