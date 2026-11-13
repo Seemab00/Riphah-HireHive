@@ -198,7 +198,7 @@ setShowPassword(false);
             <label className="mb-1 block text-sm font-medium">Password</label>
             <input
               type={showPassword ? "text" : "password"}
-              disabled={!invitation || success}
+              disabled={!invitation || success || isSubmitting}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="At least 8 characters"
@@ -217,7 +217,7 @@ setShowPassword(false);
             </label>
             <input
               type={showPassword ? "text" : "password"}
-              disabled={!invitation || success}
+              disabled={!invitation || success || isSubmitting}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your password"
