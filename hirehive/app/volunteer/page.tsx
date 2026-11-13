@@ -32,7 +32,9 @@ useEffect(() => {
 }, []);
 
 const myNotifications = notifications.filter(
-  (n) => n.volunteer.toLowerCase() === (user?.email || "").toLowerCase()
+  (n) =>
+    n.volunteer.trim().toLowerCase() ===
+    (user?.email || "").trim().toLowerCase()
 );
 
 function markAsRead(id: string) {
