@@ -7,14 +7,16 @@ import { useStore } from "@/lib/useStore";
 // Shows the open house details that the admin entered in "Event setup".
 // Students, volunteers, companies and alumni all use this card.
 export default function EventCard() {
-  const [event] = useStore<EventInfo>(KEYS.event, emptyEvent);
+  const [event, , eventLoaded] = useStore<EventInfo>(KEYS.event, emptyEvent);
 
   // If the admin has not entered anything yet, say so.
   const empty = !event.name && !event.date && !event.venue;
 
   return (
     <Card title="Open house">
-      {empty ? (
+      {!eventLoaded ? (
+  <p className="text-sm text-muted">Loading event details...</p>
+) : empty ? (
         <p className="text-sm text-muted">The admin has not announced the open house details yet.</p>
       ) : (
         <div className="space-y-1 text-sm">
