@@ -18,6 +18,7 @@ export default function AcceptInvitationPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 useEffect(() => {
@@ -43,7 +44,6 @@ useEffect(() => {
     event.preventDefault();
     setError("");
     if (success) return;
-
     if (!token) {
       setError("Invitation link is missing its token.");
       return;
@@ -84,7 +84,7 @@ useEffect(() => {
         setError("An account already exists with this email. Please sign in.");
         return;
       }
-
+setIsSubmitting(true);
       const newAccount: Account = {
         name: invitation.companyName,
         email: invitation.email.trim().toLowerCase(),
@@ -124,7 +124,8 @@ setShowPassword(false);
       setTimeout(() => {
         router.push(homeFor("company"));
       }, 2500);
-    } catch {
+        } catch {
+      setIsSubmitting(false);
       setError("Something went wrong. Please try again.");
     }
   }
@@ -251,10 +252,14 @@ setShowPassword(false);
 
           <button
             type="submit"
-            disabled={!token || !invitation || success}
+            disabled={!token || !invitation || success || isSubmitting}
             className="w-full rounded-lg bg-brand py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {success ? "Account Activated" : "Activate Company Account"}
+            {success
+  ? "Account Activated"
+  : isSubmitting
+    ? "Activating..."
+    : "Activate Company Account"}
           </button>
 
           <p className="text-center text-sm text-muted">
