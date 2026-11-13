@@ -26,11 +26,15 @@ export default function VolunteerHome() {
 const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
 useEffect(() => {
-  const saved = localStorage.getItem(KEYS.volunteerNotifications);
-  setNotifications(saved ? JSON.parse(saved) : []);
-  setNotificationsLoaded(true);
+  try {
+    const saved = localStorage.getItem(KEYS.volunteerNotifications);
+    setNotifications(saved ? JSON.parse(saved) : []);
+  } catch {
+    setNotifications([]);
+  } finally {
+    setNotificationsLoaded(true);
+  }
 }, []);
-
 const myNotifications = notifications.filter(
   (n) =>
     n.volunteer.trim().toLowerCase() ===
