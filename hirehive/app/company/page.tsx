@@ -24,7 +24,7 @@ export default function CompanyHome() {
   const [company, setCompany] = useState<Account | null>(null);
   const [search, setSearch] = useState("");
   const { teams } = useTeams();
-  const [interests, setInterests] = useStore<Interest[]>(KEYS.interests, []);
+  const [interests, setInterests, interestsLoaded] = useStore<Interest[]>(KEYS.interests, []);
   const [accounts] = useStore<Account[]>(KEYS.accounts, []);
 const [notifications, setNotifications] = useStore<CompanyNotification[]>(
   KEYS.companyNotifications,
