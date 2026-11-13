@@ -114,6 +114,8 @@ useEffect(() => {
         KEYS.companyInvitations,
         JSON.stringify(updatedInvitations)
       );
+      setPassword("");
+setConfirmPassword("");
 
       setSuccess(true);
 
