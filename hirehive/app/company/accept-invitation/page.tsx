@@ -229,6 +229,7 @@ setShowPassword(false);
           <button
   type="button"
   onClick={() => setShowPassword(!showPassword)}
+  disabled={!invitation || success || isSubmitting}
   className="text-sm font-medium text-brand hover:underline"
 >
   {showPassword ? "Hide Passwords" : "Show Passwords"}
