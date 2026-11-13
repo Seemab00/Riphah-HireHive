@@ -150,6 +150,30 @@ useEffect(() => {
           <p className="text-sm text-muted">
             Set a password to activate your company account.
           </p>
+          {invitation && (
+  <div className="space-y-2 rounded-lg border border-line bg-gray-50 p-4">
+    <h3 className="font-semibold text-gray-800">
+      Invitation Details
+    </h3>
+
+    <div className="text-sm text-gray-600">
+      <p>
+        <span className="font-medium">Company:</span>{" "}
+        {invitation.companyName}
+      </p>
+
+      <p>
+        <span className="font-medium">Email:</span>{" "}
+        {invitation.email}
+      </p>
+
+      <p>
+        <span className="font-medium">Booth:</span>{" "}
+        {invitation.boothNumber || "Not assigned yet"}
+      </p>
+    </div>
+  </div>
+)}
 
           {!token && (
             <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -199,7 +223,7 @@ useEffect(() => {
 
           <button
             type="submit"
-            disabled={!token || success}
+            disabled={!token || !invitation || success}
             className="w-full rounded-lg bg-brand py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Activate Company Account
