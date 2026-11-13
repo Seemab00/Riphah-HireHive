@@ -195,33 +195,49 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
           <Field label="Search projects" value={search} onChange={setSearch} placeholder="Technology, skill or program" />
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {shown.map((team) => (
-            <Card key={team.id}>
-              <div className="flex items-center justify-between">
-                <Chip color="teal">Table {String(tableNumbers[team.id] ?? "-").padStart(2, "0")}</Chip>
-                <span className="text-sm text-muted">{team.program}</span>
-              </div>
-              <h3 className="mt-3 text-lg font-bold">{team.title}</h3>
-              <p className="mt-1 text-sm text-muted">{team.technology}</p>
-              <p className="mt-1 text-sm">Supervisor: {team.supervisor}</p>
-              <button
-                onClick={() => toggle(team.id)}
-                className={
-                  "mt-3 rounded-lg px-4 py-2 text-sm font-semibold " +
-                  (isInterested(team.id) ? "bg-accent text-ink" : "bg-brand text-white")
-                }
-              >
-                {isInterested(team.id) ? "Interested (tap to remove)" : "Interested"}
-              </button>
-            </Card>
-          ))}
-        </div>
+                {!interestsLoaded ? (
+          <p className="text-sm text-muted">Loading project interests...</p>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              {shown.map((team) => (
+                <Card key={team.id}>
+                  <div className="flex items-center justify-between">
+                    <Chip color="teal">
+                      Table {String(tableNumbers[team.id] ?? "-").padStart(2, "0")}
+                    </Chip>
+                    <span className="text-sm text-muted">{team.program}</span>
+                  </div>
 
-        {shown.length === 0 && (
-          <p className="text-center text-sm text-muted">
-            {projects.length === 0 ? "No approved project yet." : "No project matches your search."}
-          </p>
+                  <h3 className="mt-3 text-lg font-bold">{team.title}</h3>
+                  <p className="mt-1 text-sm text-muted">{team.technology}</p>
+                  <p className="mt-1 text-sm">Supervisor: {team.supervisor}</p>
+
+                  <button
+                    onClick={() => toggle(team.id)}
+                    className={
+                      "mt-3 rounded-lg px-4 py-2 text-sm font-semibold " +
+                      (isInterested(team.id)
+                        ? "bg-accent text-ink"
+                        : "bg-brand text-white")
+                    }
+                  >
+                    {isInterested(team.id)
+                      ? "Interested (tap to remove)"
+                      : "Interested"}
+                  </button>
+                </Card>
+              ))}
+            </div>
+
+            {shown.length === 0 && (
+              <p className="text-center text-sm text-muted">
+                {projects.length === 0
+                  ? "No approved project yet."
+                  : "No project matches your search."}
+              </p>
+            )}
+          </>
         )}
       </main>
     </RoleGuard>
