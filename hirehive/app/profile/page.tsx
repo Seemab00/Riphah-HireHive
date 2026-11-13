@@ -83,10 +83,11 @@ if (user.role === "company") {
     cvVisible
   });
   setUser({
-    ...currentUser,
-    cvName: file.name,
-    cvDataUrl: String(reader.result)
-  });
+  ...currentUser,
+  cvName: file.name,
+  cvDataUrl: String(reader.result),
+  cvVisible
+});
   setMessage("CV saved in this browser demo.");
 };
     reader.readAsDataURL(file);
