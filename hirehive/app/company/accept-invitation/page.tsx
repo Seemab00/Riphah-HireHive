@@ -42,6 +42,7 @@ useEffect(() => {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    if (success) return;
 
     if (!token) {
       setError("Invitation link is missing its token.");
