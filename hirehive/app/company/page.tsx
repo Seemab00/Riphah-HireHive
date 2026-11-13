@@ -26,10 +26,8 @@ export default function CompanyHome() {
   const { teams } = useTeams();
   const [interests, setInterests, interestsLoaded] = useStore<Interest[]>(KEYS.interests, []);
 const [accounts, , accountsLoaded] = useStore<Account[]>(KEYS.accounts, []);
-const [notifications, setNotifications] = useStore<CompanyNotification[]>(
-  KEYS.companyNotifications,
-  []
-);
+const [notifications, setNotifications, notificationsLoaded] =
+  useStore<CompanyNotification[]>(KEYS.companyNotifications, []);
 
 const normalizedEmail = email.trim().toLowerCase();
 
