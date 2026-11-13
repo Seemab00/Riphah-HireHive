@@ -150,6 +150,7 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
 
         {status === "Approved" && (
           <>
+          {userLoaded ? (
             <Card title="Your placement">
               {user?.placement ? (
                 <div className="space-y-1 text-sm">
@@ -164,6 +165,11 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
                 </p>
               )}
             </Card>
+            ) : (
+  <Card title="Your placement">
+    <p className="text-sm text-muted">Loading placement details...</p>
+  </Card>
+)}
 {userLoaded && (
             <Card title="My Duties Checklist">
               <div className="mb-4 flex items-center justify-between">
