@@ -162,7 +162,7 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
                 </p>
               )}
             </Card>
-
+{userLoaded && (
             <Card title="My Duties Checklist">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted">
@@ -211,6 +211,7 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
                 </p>
               )}
             </Card>
+            )}
           </>
         )}
 <Card title={`Notifications (${unreadCount} unread)`}>
