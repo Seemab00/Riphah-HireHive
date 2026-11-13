@@ -180,11 +180,24 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
       </div>
 
       <div>
-        <p className="text-xs text-muted">Contact Information</p>
-        <p className="font-semibold">
-          {company.companyContact || "Not provided"}
-        </p>
-      </div>
+  <p className="text-xs text-muted">Website</p>
+  {company.companyWebsite?.trim() ? (
+    <a
+      href={
+        /^https?:\/\//i.test(company.companyWebsite.trim())
+          ? company.companyWebsite.trim()
+          : `https://${company.companyWebsite.trim()}`
+      }
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-semibold text-brand underline break-all"
+    >
+      {company.companyWebsite}
+    </a>
+  ) : (
+    <p className="font-semibold">Not provided</p>
+  )}
+</div>
 
       <div>
         <p className="text-xs text-muted">Assigned Booth</p>
