@@ -17,6 +17,7 @@ export default function AcceptInvitationPage() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 useEffect(() => {
@@ -190,7 +191,8 @@ useEffect(() => {
           <div>
             <label className="mb-1 block text-sm font-medium">Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
+              disabled={!invitation || success}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="At least 8 characters"
@@ -208,7 +210,8 @@ useEffect(() => {
               Confirm Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
+              disabled={!invitation || success}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your password"
@@ -217,6 +220,13 @@ useEffect(() => {
               minLength={8}
             />
           </div>
+          <button
+  type="button"
+  onClick={() => setShowPassword(!showPassword)}
+  className="text-sm font-medium text-brand hover:underline"
+>
+  {showPassword ? "Hide Passwords" : "Show Passwords"}
+</button>
 
           {error && (
             <p className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-700">
