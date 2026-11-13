@@ -59,11 +59,14 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
     "Pending",
   ];
 
-  const completedTasks = user?.taskChecklist ?? [];
+  const completedTasks = (user?.taskChecklist ?? []).filter(
+  (task) => volunteerTasks.includes(task)
+);
 
-  const progress = Math.round(
-    (completedTasks.length / volunteerTasks.length) * 100
-  );
+const progress = Math.min(
+  100,
+  Math.round((new Set(completedTasks).size / volunteerTasks.length) * 100)
+);
 
   function toggleTask(task: string) {
     if (!user) return;
