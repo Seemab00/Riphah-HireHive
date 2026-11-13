@@ -282,8 +282,23 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
 </Card>
 
         <Card>
-          <Field label="Search projects" value={search} onChange={setSearch} placeholder="Technology, skill or program" />
-        </Card>
+  <Field
+    label="Search projects"
+    value={search}
+    onChange={setSearch}
+    placeholder="Search title, technology, supervisor or student"
+  />
+
+  {search.trim() !== "" && (
+    <button
+      type="button"
+      onClick={() => setSearch("")}
+      className="mt-3 text-sm font-semibold text-brand underline"
+    >
+      Clear Search
+    </button>
+  )}
+</Card>
 
                 {!interestsLoaded ? (
           <p className="text-sm text-muted">Loading project interests...</p>
