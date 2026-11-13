@@ -240,7 +240,7 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
             <div>
               <p className="font-semibold">{a.name}</p>
               <p className="text-xs text-muted">
-                {a.program || "Program not supplied"} · {a.cvName}
+                {a.program || "Program not supplied"} | {a.cvName}
               </p>
             </div>
 
