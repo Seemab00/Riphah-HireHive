@@ -64,12 +64,13 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
   // Keep the projects that contain the search text in the title, technology or program.
   const text = search.trim().toLowerCase();
   const shown = projects.filter(
-    (t) =>
-      t.title.toLowerCase().includes(text) ||
-      t.technology.toLowerCase().includes(text) ||
-      t.program.toLowerCase().includes(text)
-  );
-
+  (t) =>
+    t.title.toLowerCase().includes(text) ||
+    t.technology.toLowerCase().includes(text) ||
+    t.program.toLowerCase().includes(text) ||
+    t.supervisor.toLowerCase().includes(text) ||
+    t.members.some((member) => member.toLowerCase().includes(text))
+);
   // Is this project in my "Interested" list?
    // Normalize email so uppercase/lowercase differences do not affect matching.
 
