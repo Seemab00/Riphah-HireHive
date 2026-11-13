@@ -204,7 +204,11 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
           </>
         )}
 <Card title={`Notifications (${unreadCount} unread)`}>
-  {myNotifications.length === 0 ? (
+  {!notificationsLoaded ? (
+    <p className="text-sm text-muted">
+      Loading notifications...
+    </p>
+  ) : myNotifications.length === 0 ? (
     <p className="text-sm text-muted">
       No notifications yet. Updates about your application and duties will appear here.
     </p>
