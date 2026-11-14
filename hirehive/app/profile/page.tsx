@@ -49,7 +49,11 @@ export default function ProfilePage() {
       if (newPassword.length < 8) { setMessage("New password must have at least 8 characters."); return; }
       if (newPassword !== confirmPassword) { setMessage("New password and confirmation do not match."); return; }
     }
-    const other = (JSON.parse(localStorage.getItem("hirehive_accounts") || "[]") as Account[]).some(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.email.toLowerCase() !== user!.email.toLowerCase());
+    const other = (JSON.parse(localStorage.getItem("hirehive_accounts") || "[]") as Account[]).some(
+  (a) =>
+    (a.email || "").trim().toLowerCase() === email.trim().toLowerCase() &&
+    (a.email || "").trim().toLowerCase() !== user.email.trim().toLowerCase()
+);
     if (other) { setMessage("That email is already in use."); return; }
   const changes: Partial<Account> = {
   name: name.trim(),
