@@ -70,7 +70,9 @@ if (user.role === "company") {
     setMessage(newPassword ? "Profile and password updated in this browser." : "Profile updated in this browser.");
   }
   function upload(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
+    const file = e.target.files?.[0];
+if (!file) return;
+e.target.value = "";
     if (file.size > 2 * 1024 * 1024) { setMessage("Please choose a CV smaller than 2 MB for this local demo."); return; }
     if (!/\.(pdf|doc|docx)$/i.test(file.name)) { setMessage("Upload a PDF, DOC, or DOCX file."); return; }
     const reader = new FileReader();
