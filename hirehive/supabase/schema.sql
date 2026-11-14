@@ -57,3 +57,18 @@ create index if not exists idx_company_notifications_email_date
   on company_notifications (company_email, created_at desc);
 
 alter table company_notifications enable row level security;
+
+create table if not exists admin_notifications (
+  id uuid primary key default gen_random_uuid(),
+  company_email text not null references accounts(email) on delete cascade,
+  company_name text not null,
+  team_id integer not null,
+  team_title text not null,
+  created_at timestamptz not null default now(),
+  read boolean not null default false
+);
+
+create index if not exists idx_admin_notifications_date
+  on admin_notifications (created_at desc);
+
+alter table admin_notifications enable row level security;
