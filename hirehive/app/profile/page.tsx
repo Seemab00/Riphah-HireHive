@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -73,39 +73,62 @@ export default function ProfilePage() {
       setMessage(err);
       return;
     }
-    
+
     setUser({ ...user, ...changes });
     setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     setMessage(newPassword ? "Profile and password updated in this browser." : "Profile updated in this browser.");
   }
-  function upload(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-if (!file) return;
-e.target.value = "";
-    if (file.size > 2 * 1024 * 1024) { setMessage("Please choose a CV smaller than 2 MB for this local demo."); return; }
-    if (!/\.(pdf|doc|docx)$/i.test(file.name)) { setMessage("Upload a PDF, DOC, or DOCX file."); return; }
-    const reader = new FileReader();
-    if (!user) return;
-    const currentUser = user;
-    reader.onload = () => {
-  updateAccount(currentUser.email, {
-    cvName: file.name,
-    cvDataUrl: String(reader.result),
-    cvVisible
-  });
-  setUser({
-  ...currentUser,
-  cvName: file.name,
-  cvDataUrl: String(reader.result),
-  cvVisible
-});
-  setMessage("CV saved in this browser demo.");
-};
-reader.onerror = () => {
-  setMessage("Could not read the CV file. Please try again.");
-};
-    reader.readAsDataURL(file);
+
+  async function upload(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  e.target.value = "";
+
+  if (file.size > 2 * 1024 * 1024) {
+    setMessage("Please choose a CV smaller than 2 MB for this local demo.");
+    return;
   }
+
+  if (!/\.(pdf|doc|docx)$/i.test(file.name)) {
+    setMessage("Upload a PDF, DOC, or DOCX file.");
+    return;
+  }
+
+  if (!user) return;
+
+  const currentUser = user;
+  const reader = new FileReader();
+
+  reader.onload = async () => {
+    const err = await updateAccount(currentUser.email, {
+      cvName: file.name,
+      cvDataUrl: String(reader.result),
+      cvVisible,
+    });
+
+    if (err) {
+      setMessage(err);
+      return;
+    }
+
+    setUser({
+      ...currentUser,
+      cvName: file.name,
+      cvDataUrl: String(reader.result),
+      cvVisible,
+    });
+
+    setMessage("CV saved successfully.");
+  };
+
+  reader.onerror = () => {
+    setMessage("Could not read the CV file. Please try again.");
+  };
+
+  reader.readAsDataURL(file);
+}
+
   return <main className="mx-auto max-w-3xl space-y-6 p-6 md:p-10">
     <div className="flex items-center justify-between gap-3"><div><h1 className="text-3xl font-bold">My profile</h1><p className="text-sm text-muted">{ROLE_LABELS[user.role]}</p></div><button onClick={() => router.push(homeFor(user.role))} className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand">Back to dashboard</button></div>
     <Card title="Personal details"><form onSubmit={save} className="max-w-xl space-y-4"><Field label="Full name / company name" value={name} onChange={setName} /><Field label="Email" value={email} onChange={setEmail} />

@@ -76,19 +76,37 @@ export function logout() {
   fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => {});
 }
 
-// Apna profile badlo, e.g. { cvName: "cv.pdf" }. Cache foran badalta hai, server par save background me.
+// Update the account on the server, then refresh the local cache.
 // Password badalna ho to { password, currentPassword }. Error message ya null.
-export async function updateAccount(email: string, changes: Partial<Account> & { currentPassword?: string }): Promise<string | null> {
+export async function updateAccount(
+  email: string,
+  changes: Partial<Account> & { currentPassword?: string }
+): Promise<string | null> {
   const mine = readCache();
-  if (mine && mine.email.toLowerCase() === email.trim().toLowerCase()) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, currentPassword, email: _e, ...visible } = changes as Record<string, unknown>;
-    writeCache({ ...mine, ...visible } as Account);
+
+  try {
+    const { ok, json } = await post("/api/auth/me", changes, "PATCH");
+
+    if (!ok) {
+      return json.error ?? "Could not save.";
+    }
+
+    if (json.account) {
+      writeCache(json.account);
+    } else if (
+      mine &&
+      mine.email.toLowerCase() === email.trim().toLowerCase()
+    ) {
+      const { password, currentPassword, email: _e, ...visible } =
+        changes as Record<string, unknown>;
+
+      writeCache({ ...mine, ...visible } as Account);
+    }
+
+    return null;
+  } catch {
+    return "Could not save. Please check your connection and try again.";
   }
-  const { ok, json } = await post("/api/auth/me", changes, "PATCH");
-  if (!ok) return json.error ?? "Could not save.";
-  if (json.account) writeCache(json.account);
-  return null;
 }
 
 // Every role has its own home page.

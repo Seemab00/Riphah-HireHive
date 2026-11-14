@@ -22,6 +22,8 @@ const volunteerTasks = [
 export default function VolunteerHome() {
   const [user, setUser] = useState<Account | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
+  const [savingTask, setSavingTask] = useState(false);
+  const [taskError, setTaskError] = useState("");
   const [notifications, setNotifications] = useState<VolunteerNotification[]>([]);
 const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
@@ -78,20 +80,37 @@ const progress = Math.min(
   Math.round((new Set(completedTasks).size / volunteerTasks.length) * 100)
 );
 
-  function toggleTask(task: string) {
-    if (!user) return;
+  async function toggleTask(task: string) {
+  if (!user || savingTask) return;
 
-    const updatedTasks = completedTasks.includes(task)
-      ? completedTasks.filter((item) => item !== task)
-      : [...completedTasks, task];
+  const previousTasks = completedTasks;
+  const updatedTasks = previousTasks.includes(task)
+    ? previousTasks.filter((item) => item !== task)
+    : [...previousTasks, task];
 
-    updateAccount(user.email, { taskChecklist: updatedTasks });
+  setSavingTask(true);
+  setTaskError("");
+
+  try {
+    const error = await updateAccount(user.email, {
+      taskChecklist: updatedTasks,
+    });
+
+    if (error) {
+      setTaskError(error);
+      return;
+    }
 
     setUser({
       ...user,
       taskChecklist: updatedTasks,
     });
+  } catch {
+    setTaskError("Could not save your task. Please try again.");
+  } finally {
+    setSavingTask(false);
   }
+}
 
   function decisionColor(
     value: string
@@ -202,6 +221,9 @@ const progress = Math.min(
               </div>
 
               <div className="space-y-3">
+              {taskError && (
+  <p className="text-sm text-red-600">{taskError}</p>
+)}
                 {volunteerTasks.map((task) => (
                   <label
                     key={task}
@@ -211,6 +233,7 @@ const progress = Math.min(
                       type="checkbox"
                       checked={completedTasks.includes(task)}
                       onChange={() => toggleTask(task)}
+                      disabled={savingTask}
                       className="mt-1 h-4 w-4 accent-current"
                     />
                     <span
