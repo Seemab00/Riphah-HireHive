@@ -26,27 +26,86 @@ export default function CompanyHome() {
   const { teams } = useTeams();
   const [interests, setInterests, interestsLoaded] = useStore<Interest[]>(KEYS.interests, []);
 const [accounts, , accountsLoaded] = useStore<Account[]>(KEYS.accounts, []);
-const [notifications, setNotifications, notificationsLoaded] =
-  useStore<CompanyNotification[]>(KEYS.companyNotifications, []);
+const [notifications, setNotifications] = useState<CompanyNotification[]>([]);
+const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+const [notificationError, setNotificationError] = useState("");
 
 const normalizedEmail = email.trim().toLowerCase();
-
-const myNotifications = notifications.filter(
-  (n) => n.company.trim().toLowerCase() === normalizedEmail
-);
-
-function markAsRead(id: string) {
-  setNotifications(
-    notifications.map((n) =>
-      n.id === id &&
-      n.company.trim().toLowerCase() === normalizedEmail
-        ? { ...n, read: true }
-        : n
-    )
-  );
-}
-
+const myNotifications = notifications;
 const unreadCount = myNotifications.filter((n) => !n.read).length;
+
+useEffect(() => {
+  let active = true;
+
+  async function loadNotifications() {
+    try {
+      const response = await fetch("/api/company/notifications");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Could not load notifications.");
+      }
+
+      if (active) {
+        setNotifications(
+          (result.notifications ?? []).map((n: {
+            id: string;
+            title: string;
+            message: string;
+            created_at: string;
+            read: boolean;
+          }) => ({
+            id: n.id,
+            company: getUser()?.email ?? "",
+            title: n.title,
+            message: n.message,
+            date: new Date(n.created_at).toLocaleString(),
+            read: n.read,
+          }))
+        );
+      }
+    } catch (error) {
+      if (active) {
+        setNotificationError(
+          error instanceof Error ? error.message : "Could not load notifications."
+        );
+      }
+    } finally {
+      if (active) setNotificationsLoaded(true);
+    }
+  }
+
+  void loadNotifications();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+async function markAsRead(id: string) {
+  setNotificationError("");
+
+  try {
+    const response = await fetch("/api/company/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Could not update notification.");
+    }
+
+    setNotifications((current) =>
+      current.map((n) => n.id === id ? { ...n, read: true } : n)
+    );
+  } catch (error) {
+    setNotificationError(
+      error instanceof Error ? error.message : "Could not update notification."
+    );
+  }
+}
   useEffect(() => {
   const user = getUser();
 
@@ -120,6 +179,8 @@ const unreadCount = myNotifications.filter((n) => !n.read).length;
         <Card title={`Notifications (${unreadCount} unread)`}>
   {!notificationsLoaded ? (
   <p className="text-sm text-muted">Loading notifications...</p>
+) : notificationError ? (
+  <p className="text-sm text-red-600">{notificationError}</p>
 ) : myNotifications.length === 0 ? (
   <p className="text-sm text-muted">
     No notifications yet. Updates from HireHive will appear here.

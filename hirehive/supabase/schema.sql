@@ -1,4 +1,4 @@
--- Supabase > SQL Editor me poora paste karke Run karo.
+﻿-- Supabase > SQL Editor me poora paste karke Run karo.
 -- RLS ON hai aur koi policy nahi: browser (anon key) in tables ko chhu nahi sakta.
 -- Sirf hamari Next.js API (service-role key, server par) access karti hai.
 
@@ -42,3 +42,18 @@ alter table accounts enable row level security;
 alter table records enable row level security;
 alter table email_outbox enable row level security;
 alter table invites enable row level security;
+
+-- Company notifications table
+create table if not exists company_notifications (
+  id uuid primary key default gen_random_uuid(),
+  company_email text not null references accounts(email) on delete cascade,
+  title text not null,
+  message text not null,
+  created_at timestamptz not null default now(),
+  read boolean not null default false
+);
+
+create index if not exists idx_company_notifications_email_date
+  on company_notifications (company_email, created_at desc);
+
+alter table company_notifications enable row level security;
