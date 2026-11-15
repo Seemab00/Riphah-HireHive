@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Card from "@/components/Card";
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
     {
       title: "Company Management",
       description: "View registered company accounts.",
-      href: "/admin/staff",
+      href: "/admin/companies",
     },
     {
       title: "AI Team Suggestions",
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
 
           <p className="mt-2 text-sm text-muted">
             {event.name
-              ? `${event.name} • ${event.date} • ${event.venue}`
+              ? `${event.name} â€¢ ${event.date} â€¢ ${event.venue}`
               : "Welcome! Set up your Open House event to get started."}
           </p>
         </div>
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
               <p className="mt-2 text-sm text-muted">{action.description}</p>
 
               <p className="mt-4 text-sm font-semibold text-brand">
-                Open section →
+                Open section â†’
               </p>
             </Link>
           ))}
@@ -330,3 +330,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

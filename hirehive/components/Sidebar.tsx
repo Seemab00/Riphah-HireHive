@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import Logo from "./Logo";
 const links = [
   { label: "Dashboard", href: "/admin" },
   { label: "Registrations", href: "/admin/registrations" },
+  { label: "Company Directory", href: "/admin/companies" },
   { label: "Volunteers", href: "/admin/volunteers" },
   { label: "Volunteer selection", href: "/admin/volunteer-selection" },
   { label: "Staff / coordinators", href: "/admin/staff" },
@@ -61,3 +62,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+
