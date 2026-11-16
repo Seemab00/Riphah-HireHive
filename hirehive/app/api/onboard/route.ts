@@ -82,7 +82,13 @@ export async function POST(req: Request) {
     }
 
     try {
-      if (needsSetup) {
+  if (
+    process.env.INVITE_EMAIL_MODE === "manual" &&
+    process.env.NODE_ENV !== "production" &&
+    chosen
+  ) {
+    // Skip welcome email during local testing.
+  } else if (needsSetup) {
         const token = randomBytes(32).toString("hex");
         const tokenHash = createHash("sha256").update(token).digest("hex");
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
