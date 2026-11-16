@@ -23,6 +23,18 @@ export default function AdminDashboard() {
 
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
 
+type FacultyNotification = {
+  id: string;
+  title: string;
+  message: string;
+  upload_id: string;
+  created_at: string;
+  read: boolean;
+};
+
+const [facultyNotifications, setFacultyNotifications] =
+  useState<FacultyNotification[]>([]);
+
   useEffect(() => {
     fetch("/api/admin/notifications", { cache: "no-store" })
       .then((res) => {
@@ -32,6 +44,16 @@ export default function AdminDashboard() {
       .then((data) => setNotifications(data.notifications ?? []))
       .catch((error) => console.error(error));
   }, []);
+
+  useEffect(() => {
+  fetch("/api/admin/faculty-notifications", { cache: "no-store" })
+    .then((res) => {
+      if (!res.ok) throw new Error("Could not load faculty notifications.");
+      return res.json();
+    })
+    .then((data) => setFacultyNotifications(data.notifications ?? []))
+    .catch((error) => console.error(error));
+}, []);  
 
   async function markNotificationRead(id: string) {
     const res = await fetch("/api/admin/notifications", {
@@ -46,6 +68,23 @@ export default function AdminDashboard() {
       current.map((item) => (item.id === id ? { ...item, read: true } : item)),
     );
   }
+
+async function markFacultyNotificationRead(id: string) {
+  const res = await fetch("/api/admin/faculty-notifications", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+
+  if (!res.ok) return;
+
+  setFacultyNotifications((current) =>
+    current.map((item) =>
+      item.id === id ? { ...item, read: true } : item,
+    ),
+  );
+}
+
   const { teams } = useTeams();
   const [accounts] = useStore<Account[]>(KEYS.accounts, []);
   const [lcds] = useStore<LcdRequest[]>(KEYS.lcd, []);
@@ -105,6 +144,11 @@ export default function AdminDashboard() {
       title: "FYP Team Registrations",
       description: "Review and approve registered FYP teams.",
       href: "/admin/registrations",
+    },
+    {
+      title: "SDP Group Review",
+      description: "Review faculty Excel uploads and approve or reject complete student groups.",
+      href: "/admin/sdp-review",
     },
     {
       title: "Volunteer Selection",
@@ -230,6 +274,50 @@ export default function AdminDashboard() {
                     <p className="mt-1 text-xs text-muted">
                       {new Date(item.created_at).toLocaleString()}
                     </p>
+                  </div>
+
+                  <Chip color={item.read ? "green" : "blue"}>
+                    {item.read ? "Read" : "Unread"}
+                  </Chip>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </Card>
+            {/* Faculty SDP Upload Notifications */}
+      <Card title="Faculty SDP Upload Notifications">
+        <div className="space-y-3">
+          {facultyNotifications.length === 0 ? (
+            <p className="text-sm text-muted">
+              No faculty upload notifications yet.
+            </p>
+          ) : (
+            facultyNotifications.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => markFacultyNotificationRead(item.id)}
+                className={`w-full rounded-lg border border-line p-4 text-left transition hover:border-brand ${
+                  item.read ? "bg-white" : "bg-blue-50"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {item.message}
+                    </p>
+                    <p className="mt-1 text-xs text-muted">
+                      {new Date(item.created_at).toLocaleString()}
+                    </p>
+                    <Link
+                      href="/admin/sdp-review"
+                      className="mt-2 inline-block text-sm font-semibold text-brand underline"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      Review SDP Groups
+                    </Link>
                   </div>
 
                   <Chip color={item.read ? "green" : "blue"}>

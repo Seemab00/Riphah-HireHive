@@ -297,6 +297,22 @@ export async function POST(req: Request) {
       });
 
     if (saveError) throw new Error(saveError.message);
+    
+    const { error: notificationError } = await db()
+  .from("faculty_upload_notifications")
+  .insert({
+    title: "New Faculty SDP Upload",
+    message: `${department} faculty uploaded ${phase} file: ${file.name}. ${upload.totalRows} students, ${upload.flaggedRows} flagged rows.`,
+    upload_id: upload.id,
+    read: false,
+  });
+
+if (notificationError) {
+  console.error(
+    "Faculty upload notification failed:",
+    notificationError.message
+  );
+}
 
     return NextResponse.json({
       ok: true,
