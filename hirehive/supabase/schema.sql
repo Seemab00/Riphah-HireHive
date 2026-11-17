@@ -72,3 +72,42 @@ create index if not exists idx_admin_notifications_date
   on admin_notifications (created_at desc);
 
 alter table admin_notifications enable row level security;
+
+-- FYP group documents
+create table if not exists fyp_documents (
+  id uuid primary key default gen_random_uuid(),
+  department text not null,
+  phase text not null,
+  group_name text not null,
+  uploaded_by_email text not null references accounts(email),
+  uploaded_by_name text not null,
+  file_name text not null,
+  storage_path text not null unique,
+  mime_type text not null,
+  file_size bigint not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_fyp_documents_group
+on fyp_documents (department, phase, group_name, created_at desc);
+
+alter table fyp_documents enable row level security;
+
+
+-- FYP written progress updates
+create table if not exists fyp_progress_updates (
+  id uuid primary key default gen_random_uuid(),
+  department text not null,
+  phase text not null,
+  group_name text not null,
+  posted_by_email text not null references accounts(email),
+  posted_by_name text not null,
+  title text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_fyp_progress_group
+on fyp_progress_updates (department, phase, group_name, created_at desc);
+
+alter table fyp_progress_updates enable row level security;

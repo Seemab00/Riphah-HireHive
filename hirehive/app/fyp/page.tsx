@@ -7,6 +7,7 @@ import TopBar from "@/components/TopBar";
 import Card from "@/components/Card";
 import EventCard from "@/components/EventCard";
 import CvCard from "@/components/CvCard";
+import FypDocuments from "@/components/FypDocuments";
 import { getUser } from "@/lib/auth";
 import { Account } from "@/lib/data";
 
@@ -91,6 +92,7 @@ export default function FypHome() {
         </Card>
 
         <CvCard />
+        <FypDocuments />
       </main>
     </RoleGuard>
   );
