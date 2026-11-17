@@ -8,15 +8,13 @@ import Logo from "./Logo";
 // The admin pages. Add a new line here when a new admin page is ready.
 const links = [
   { label: "Dashboard", href: "/admin" },
-  { label: "Registrations", href: "/admin/registrations" },
+  { label: "SDP Group Review", href: "/admin/sdp-review" },
   { label: "Company Directory", href: "/admin/companies" },
   { label: "Volunteers", href: "/admin/volunteers" },
   { label: "Volunteer selection", href: "/admin/volunteer-selection" },
   { label: "Staff / coordinators", href: "/admin/staff" },
-  { label: "AI team suggestions", href: "/admin/ai-recommendations" },
   { label: "QR check-in design", href: "/admin/checkin" },
   { label: "My profile", href: "/profile" },
-  { label: "Tables and tags", href: "/admin/tables" },
   { label: "LCD report", href: "/admin/lcd" },
   { label: "Event setup", href: "/admin/event" },
   { label: "Alumni feedback", href: "/admin/feedback" },

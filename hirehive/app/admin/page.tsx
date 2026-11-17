@@ -4,10 +4,8 @@ import Link from "next/link";
 import Card from "@/components/Card";
 import Chip from "@/components/Chip";
 import StatCard from "@/components/StatCard";
-import { useTeams } from "@/lib/useTeams";
 import { useStore } from "@/lib/useStore";
 import { useEffect, useState } from "react";
-import { assignTables, PROGRAMS, RANGES } from "@/lib/tables";
 import { Account, emptyEvent, EventInfo, KEYS, LcdRequest } from "@/lib/data";
 
 export default function AdminDashboard() {
@@ -85,17 +83,9 @@ async function markFacultyNotificationRead(id: string) {
   );
 }
 
-  const { teams } = useTeams();
   const [accounts] = useStore<Account[]>(KEYS.accounts, []);
   const [lcds] = useStore<LcdRequest[]>(KEYS.lcd, []);
   const [event] = useStore<EventInfo>(KEYS.event, emptyEvent);
-
-  const approvedTeams = teams.filter((t) => t.status === "Approved").length;
-  const pendingTeams = teams.filter((t) => t.status === "Pending").length;
-  const rejectedTeams = teams.filter((t) => t.status === "Rejected").length;
-
-  const tableNumbers = assignTables(teams);
-  const tablesAssigned = Object.keys(tableNumbers).length;
 
   const companies = accounts.filter((a) => a.role === "company");
   const volunteers = accounts.filter((a) => a.role === "volunteer");
@@ -137,7 +127,7 @@ async function markFacultyNotificationRead(id: string) {
   }
 
   const nothingToReview =
-    pendingTeams === 0 && pendingVolunteers === 0 && lcdsNotReturned === 0;
+  pendingVolunteers === 0 && lcdsNotReturned === 0;
 
   const quickActions = [
     {
@@ -206,16 +196,6 @@ async function markFacultyNotificationRead(id: string) {
         <h2 className="mb-3 text-lg font-bold">System Overview</h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <StatCard label="FYP Teams Registered" value={teams.length} />
-
-          <StatCard label="Teams Pending" value={pendingTeams} />
-
-          <StatCard label="Teams Approved" value={approvedTeams} />
-
-          <StatCard label="Teams Rejected" value={rejectedTeams} />
-
-          <StatCard label="Tables Assigned" value={tablesAssigned} />
-
           <StatCard label="Companies Registered" value={companies.length} />
 
           <StatCard label="Volunteers Pending" value={pendingVolunteers} />
@@ -334,13 +314,6 @@ async function markFacultyNotificationRead(id: string) {
         <Card title="Needs Attention">
           <div className="space-y-3">
             {attention(
-              "Teams waiting for approval",
-              pendingTeams,
-              "bg-amber-100 text-amber-900",
-              "/admin/registrations",
-            )}
-
-            {attention(
               "Volunteers waiting for approval",
               pendingVolunteers,
               "bg-amber-100 text-amber-900",
@@ -367,52 +340,6 @@ async function markFacultyNotificationRead(id: string) {
               </p>
             )}
           </div>
-        </Card>
-
-        <Card title="Table Allocation Overview">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs text-muted">
-                <tr>
-                  <th className="py-2">Program</th>
-                  <th>Table Range</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {PROGRAMS.map((program) => {
-                  const count = teams.filter(
-                    (t) =>
-                      t.program === program && tableNumbers[t.id] !== undefined,
-                  ).length;
-
-                  return (
-                    <tr key={program} className="border-t border-line">
-                      <td className="py-3 font-semibold">{program}</td>
-
-                      <td>{RANGES[program].label}</td>
-
-                      <td>
-                        {count > 0 ? (
-                          <Chip color="green">Ready to print</Chip>
-                        ) : (
-                          <Chip color="blue">Not generated</Chip>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <Link
-            href="/admin/tables"
-            className="mt-4 inline-block rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white"
-          >
-            Manage Tables and Tags
-          </Link>
         </Card>
       </div>
     </div>

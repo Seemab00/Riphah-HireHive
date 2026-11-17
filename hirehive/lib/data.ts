@@ -50,6 +50,12 @@ export type Account = {
   coordinatorLevel?: "incharge" | "faculty" | "student";
   department?: "SE" | "CA" | "CS" | "All";
   phase?: "FYP1" | "FYP2" | "All";
+  groupName?: string;
+  supervisor?: string;
+  projectTitle?: string;
+  technologies?: string;
+  projectDescription?: string;
+  contactNo?: string;
   volunteerStage?: number;    // 1 student coordinator, 2 faculty coordinator, 3 in-charge, 4 selected, -1 rejected
   volunteerStageDecisions?: string[];
   volunteerExperience?: string;
