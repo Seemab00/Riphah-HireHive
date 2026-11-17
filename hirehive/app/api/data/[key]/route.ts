@@ -72,10 +72,7 @@ function visibleAccounts(s: Session, all: ReturnType<typeof toAccount>[]) {
       if (a.email === s.email) return true;
 
       if (s.role === "company") {
-        return (
-          (a.role === "fyp" || a.role === "student") &&
-          a.cvVisible === true
-        );
+        return a.role === "fyp" || a.role === "student";
       }
 
       if (s.role === "alumni") return a.role === "fyp";
@@ -86,8 +83,7 @@ function visibleAccounts(s: Session, all: ReturnType<typeof toAccount>[]) {
       const canSeeCv =
         a.email === s.email ||
         (s.role === "company" &&
-          (a.role === "fyp" || a.role === "student") &&
-          a.cvVisible === true);
+          (a.role === "fyp" || a.role === "student"));
 
       if (canSeeCv) return a;
 

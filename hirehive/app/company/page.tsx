@@ -290,7 +290,6 @@ async function markAsRead(id: string) {
         .filter(
           (a) =>
             (a.role === "fyp" || a.role === "student") &&
-            a.cvVisible &&
             a.cvName
         )
         .map((a) => (
@@ -324,11 +323,10 @@ async function markAsRead(id: string) {
       {accounts.filter(
         (a) =>
           (a.role === "fyp" || a.role === "student") &&
-          a.cvVisible &&
           a.cvName
       ).length === 0 && (
         <p className="text-sm text-muted">
-          No students have shared a CV yet.
+          No student CVs have been uploaded yet.
         </p>
       )}
     </div>

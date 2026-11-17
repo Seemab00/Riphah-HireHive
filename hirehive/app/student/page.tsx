@@ -51,8 +51,8 @@ export default function StudentHome() {
               {user?.cvName && <span className="font-semibold">{user.cvName}</span>}
             </div>
             <p className="mt-3 text-sm text-muted">
-              {user?.cvVisible ? "Companies can view your CV." : "Companies cannot view your CV yet."}
-            </p>
+  Your uploaded CV is automatically available to approved companies.
+</p>
             <Link
               href="/profile"
               className="mt-4 inline-block rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white"

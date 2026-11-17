@@ -45,8 +45,8 @@ export type Account = {
   placement?: string;         // volunteers only: where the admin placed them
   shift?: string;             // volunteers only: their working time
   cvName?: string;            // file name of the uploaded CV
-  cvVisible?: boolean;        // may companies see the CV?
   cvDataUrl?: string;         // prototype-only local CV preview; use private file storage in production
+  cvVisible?: boolean;
   coordinatorLevel?: "incharge" | "faculty" | "student";
   department?: "SE" | "CA" | "CS" | "All";
   phase?: "FYP1" | "FYP2" | "All";
