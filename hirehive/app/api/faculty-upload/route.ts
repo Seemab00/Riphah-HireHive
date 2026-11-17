@@ -335,3 +335,86 @@ if (notificationError) {
     );
   }
 }
+
+
+export async function GET() {
+  try {
+    const session = await getSession();
+
+    if (!session || session.role !== "coordinator") {
+      return NextResponse.json(
+        { error: "Only coordinators can view faculty uploads." },
+        { status: 403 }
+      );
+    }
+
+    const { data: account, error: accountError } = await db()
+      .from("accounts")
+      .select("data")
+      .eq("email", session.email)
+      .maybeSingle();
+
+    if (accountError || !account) {
+      return NextResponse.json(
+        { error: "Coordinator account could not be verified." },
+        { status: 403 }
+      );
+    }
+
+    const profile = account.data ?? {};
+
+    if (profile.coordinatorLevel !== "faculty") {
+      return NextResponse.json(
+        { error: "Only Faculty Coordinators can view these records." },
+        { status: 403 }
+      );
+    }
+
+    const department = String(profile.department ?? "");
+    const phase = String(profile.phase ?? "All");
+
+    if (!["SE", "CA", "CS"].includes(department)) {
+      return NextResponse.json(
+        { error: "Invalid faculty assignment." },
+        { status: 403 }
+      );
+    }
+
+    const { data, error } = await db()
+      .from("records")
+      .select("value")
+      .eq("key", STORAGE_KEY)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+
+    const uploads = Array.isArray(data?.value)
+      ? data.value
+      : [];
+
+    const facultyUploads = uploads.filter((upload: any) => {
+      return (
+        upload.department === department &&
+        (phase === "All" || upload.phase === phase) &&
+        upload.status !== "Superseded"
+      );
+    });
+
+    return NextResponse.json({
+      ok: true,
+      uploads: facultyUploads,
+    });
+  } catch (error) {
+    console.error("Faculty uploads fetch failed:", error);
+
+    return NextResponse.json(
+      {
+        error: error instanceof Error
+          ? error.message
+          : "Could not load faculty records.",
+      },
+      { status: 500 }
+    );
+  }
+}
+

@@ -8,6 +8,32 @@ import { getUser, logout } from "@/lib/auth";
 import { Account, KEYS } from "@/lib/data";
 import { useStore } from "@/lib/useStore";
 
+interface FacultyUploadRow {
+  name: string;
+  email: string;
+  sapId: string;
+  valid: boolean;
+  issues: string[];
+  excelRow: number;
+  contactNo: string;
+  groupName: string;
+  supervisor: string;
+  projectTitle: string;
+}
+
+interface FacultyUpload {
+  id: string;
+  rows: FacultyUploadRow[];
+  phase: "FYP1" | "FYP2";
+  status: string;
+  fileName: string;
+  totalRows: number;
+  validRows: number;
+  flaggedRows: number;
+  department: string;
+  uploadedAt: string;
+}
+
 export default function CoordinatorDashboard() {
   const router = useRouter();
 
@@ -19,6 +45,14 @@ export default function CoordinatorDashboard() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState("");
+  const [facultyUploads, setFacultyUploads] = useState<FacultyUpload[]>([]);
+  const [loadingUploads, setLoadingUploads] = useState(false);
+  const [uploadListError, setUploadListError] = useState("");
+  const [editingStudent, setEditingStudent] = useState<{
+    uploadId: string;
+    row: FacultyUploadRow;
+  } | null>(null);
+  const [savingStudent, setSavingStudent] = useState(false);
 
   useEffect(() => {
     const u = getUser();
@@ -27,6 +61,36 @@ export default function CoordinatorDashboard() {
     else if (u.role !== "coordinator") router.replace("/" + u.role);
     else setUser(u);
   }, [router]);
+
+  useEffect(() => {
+  if (!user || user.coordinatorLevel !== "faculty") return;
+
+  async function loadFacultyUploads() {
+    setLoadingUploads(true);
+    setUploadListError("");
+
+    try {
+      const response = await fetch("/api/faculty-upload");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to load student records.");
+      }
+
+      setFacultyUploads(result.uploads || []);
+    } catch (error) {
+      setUploadListError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load student records."
+      );
+    } finally {
+      setLoadingUploads(false);
+    }
+  }
+
+  loadFacultyUploads();
+}, [user]);
 
   if (!user) return null;
 
@@ -133,6 +197,62 @@ export default function CoordinatorDashboard() {
     }
   }
 
+  async function handleSaveStudent(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+
+  if (!editingStudent) return;
+
+  setSavingStudent(true);
+  setUploadListError("");
+
+  try {
+    const response = await fetch("/api/faculty-upload", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uploadId: editingStudent.uploadId,
+        excelRow: editingStudent.row.excelRow,
+        contactNo: editingStudent.row.contactNo,
+        groupName: editingStudent.row.groupName,
+        supervisor: editingStudent.row.supervisor,
+        projectTitle: editingStudent.row.projectTitle,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to update student.");
+    }
+
+    setFacultyUploads((previous) =>
+      previous.map((upload) =>
+        upload.id === editingStudent.uploadId
+          ? {
+              ...upload,
+              rows: upload.rows.map((row) =>
+                row.excelRow === editingStudent.row.excelRow
+                  ? { ...row, ...editingStudent.row }
+                  : row
+              ),
+            }
+          : upload
+      )
+    );
+
+    setEditingStudent(null);
+    setUploadResult("Student details updated successfully.");
+  } catch (error) {
+    setUploadListError(
+      error instanceof Error ? error.message : "Unable to update student."
+    );
+  } finally {
+    setSavingStudent(false);
+  }
+}
+
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -188,6 +308,7 @@ export default function CoordinatorDashboard() {
 
       {user.coordinatorLevel === "faculty" && (
         <Card title="SDP-I / SDP-II Excel Upload">
+
           <p className="mb-4 text-sm text-muted">
             Upload your faculty's student Excel file for Admin review.
             Assigned faculty: <strong>{user.department}</strong>
@@ -242,6 +363,233 @@ export default function CoordinatorDashboard() {
           </form>
         </Card>
       )}
+
+            {user.coordinatorLevel === "faculty" && editingStudent && (
+        <Card title="Edit Student Details">
+          <form onSubmit={handleSaveStudent} className="space-y-4">
+            <div className="rounded-lg bg-soft p-3">
+              <p className="font-semibold">{editingStudent.row.name}</p>
+              <p className="text-sm text-muted">
+                SAP ID: {editingStudent.row.sapId} · {editingStudent.row.email}
+              </p>
+              <p className="text-xs text-muted">
+                Student Name, SAP ID and Email cannot be changed.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Contact Number
+              </label>
+              <input
+                type="text"
+                value={editingStudent.row.contactNo || ""}
+                onChange={(e) =>
+                  setEditingStudent((current) =>
+                    current
+                      ? {
+                          ...current,
+                          row: { ...current.row, contactNo: e.target.value },
+                        }
+                      : current
+                  )
+                }
+                className="w-full rounded-lg border border-line p-3 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Group Name
+              </label>
+              <input
+                type="text"
+                value={editingStudent.row.groupName || ""}
+                onChange={(e) =>
+                  setEditingStudent((current) =>
+                    current
+                      ? {
+                          ...current,
+                          row: { ...current.row, groupName: e.target.value },
+                        }
+                      : current
+                  )
+                }
+                className="w-full rounded-lg border border-line p-3 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Supervisor Name
+              </label>
+              <input
+                type="text"
+                value={editingStudent.row.supervisor || ""}
+                onChange={(e) =>
+                  setEditingStudent((current) =>
+                    current
+                      ? {
+                          ...current,
+                          row: { ...current.row, supervisor: e.target.value },
+                        }
+                      : current
+                  )
+                }
+                className="w-full rounded-lg border border-line p-3 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Project Title
+              </label>
+              <input
+                type="text"
+                value={editingStudent.row.projectTitle || ""}
+                onChange={(e) =>
+                  setEditingStudent((current) =>
+                    current
+                      ? {
+                          ...current,
+                          row: { ...current.row, projectTitle: e.target.value },
+                        }
+                      : current
+                  )
+                }
+                className="w-full rounded-lg border border-line p-3 text-sm"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="rounded-lg border border-line px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={savingStudent}
+                className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {savingStudent ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {user.coordinatorLevel === "faculty" && (
+  <Card title="Uploaded Student Records">
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm text-muted">
+        Students uploaded for {user.department}
+      </p>
+
+      <button
+        onClick={() => window.location.reload()}
+        className="rounded-lg border border-line px-3 py-2 text-sm"
+      >
+        Refresh records
+      </button>
+    </div>
+
+    {loadingUploads && (
+      <p className="py-4 text-sm text-muted">
+        Loading student records...
+      </p>
+    )}
+
+    {uploadListError && (
+      <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        {uploadListError}
+      </p>
+    )}
+
+    {!loadingUploads &&
+      !uploadListError &&
+      (["FYP1", "FYP2"] as const).map((phase) => {
+        const uploads = facultyUploads.filter(
+          (upload) => upload.phase === phase
+        );
+
+        return (
+          <div key={phase} className="mb-6">
+            <h3 className="mb-3 text-lg font-semibold">
+              {phase === "FYP1" ? "SDP-I (FYP-1)" : "SDP-II (FYP-2)"}
+            </h3>
+
+            {uploads.length === 0 ? (
+              <p className="text-sm text-muted">
+                No upload available for this phase.
+              </p>
+            ) : (
+              uploads.map((upload) => (
+                <div
+                  key={upload.id}
+                  className="mb-4 rounded-lg border border-line p-4"
+                >
+                  <div className="mb-3">
+                    <p className="font-semibold">{upload.fileName}</p>
+                    <p className="text-xs text-muted">
+                      {upload.totalRows} students · {upload.status}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {upload.rows.map((student) => (
+                      <div
+                        key={`${upload.id}-${student.excelRow}`}
+                        className="rounded-lg bg-soft p-3"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold">
+                              {student.name}
+                            </p>
+                            <p className="text-xs text-muted">
+                              SAP ID: {student.sapId} · {student.email}
+                            </p>
+                            <p className="mt-1 text-sm">
+                              Group: {student.groupName || "Not assigned"}
+                            </p>
+                            <p className="text-sm">
+                              Supervisor: {student.supervisor || "Not assigned"}
+                            </p>
+                            <p className="text-sm">
+                              Project: {student.projectTitle || "Not assigned"}
+                            </p>
+                            <p className="text-sm">
+                              Contact: {student.contactNo || "Not supplied"}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              setEditingStudent({
+                                uploadId: upload.id,
+                                row: { ...student },
+                              })
+                            }
+                            className="rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand"
+                          >
+                            Edit details
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      })}
+  </Card>
+)}
 
       <Card title="Volunteer applications awaiting your decision">
         <p className="mb-4 text-sm text-muted">
