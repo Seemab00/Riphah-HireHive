@@ -18,6 +18,8 @@ type UploadRow = {
   groupName: string;
   supervisor: string;
   projectTitle: string;
+  technologies: string;
+  projectDescription: string;
   excelRow: number;
   issues: string[];
   valid: boolean;
@@ -41,7 +43,9 @@ function parseWorkbook(buffer: ArrayBuffer) {
   const workbook = XLSX.read(buffer, { type: "array" });
   const firstSheet = workbook.SheetNames[0];
 
-  if (!firstSheet) throw new Error("Excel file mein koi worksheet nahi mili.");
+  if (!firstSheet) {
+    throw new Error("Excel file mein koi worksheet nahi mili.");
+  }
 
   const sheet = workbook.Sheets[firstSheet];
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
@@ -52,6 +56,7 @@ function parseWorkbook(buffer: ArrayBuffer) {
 
   const headerIndex = matrix.findIndex((row) => {
     const headers = row.map(normalize);
+
     return (
       findColumn(headers, ["sapid", "sapno", "sapnumber"]) >= 0 &&
       findColumn(headers, ["name", "studentname", "fullname"]) >= 0
@@ -59,7 +64,9 @@ function parseWorkbook(buffer: ArrayBuffer) {
   });
 
   if (headerIndex < 0) {
-    throw new Error("SAP ID aur Student Name columns wali header row nahi mili.");
+    throw new Error(
+      "SAP ID aur Student Name columns wali header row nahi mili."
+    );
   }
 
   const headers = matrix[headerIndex].map(normalize);
@@ -68,15 +75,38 @@ function parseWorkbook(buffer: ArrayBuffer) {
     sap: findColumn(headers, ["sapid", "sapno", "sapnumber"]),
     name: findColumn(headers, ["name", "studentname", "fullname"]),
     email: findColumn(headers, ["email", "studentemail"]),
-    contact: findColumn(headers, ["contactno", "contactnumber", "phone", "mobile"]),
+    contact: findColumn(headers, [
+      "contactno",
+      "contactnumber",
+      "phone",
+      "mobile",
+    ]),
     group: findColumn(headers, ["groupname", "group"]),
     supervisor: findColumn(headers, ["supervisorname", "supervisor"]),
     title: findColumn(headers, ["projecttitle", "title"]),
+    technologies: findColumn(headers, [
+      "technologies",
+      "technology",
+      "technologytools",
+      "technologytool",
+      "tools",
+      "techstack",
+      "technologiesused",
+      "toolsused",
+    ]),
+    description: findColumn(headers, [
+      "projectdescription",
+      "description",
+      "projectoverview",
+      "overview",
+    ]),
   };
 
   let previousGroup = "";
   let previousSupervisor = "";
   let previousTitle = "";
+  let previousTechnologies = "";
+  let previousDescription = "";
 
   const rows: UploadRow[] = [];
 
@@ -85,17 +115,43 @@ function parseWorkbook(buffer: ArrayBuffer) {
 
     const sapId = cellText(row[columns.sap]);
     const name = cellText(row[columns.name]);
-    const groupCell = columns.group >= 0 ? cellText(row[columns.group]) : "";
-    const supervisorCell = columns.supervisor >= 0
-      ? cellText(row[columns.supervisor])
-      : "";
-    const titleCell = columns.title >= 0 ? cellText(row[columns.title]) : "";
+
+    const groupCell =
+      columns.group >= 0 ? cellText(row[columns.group]) : "";
+
+    const supervisorCell =
+      columns.supervisor >= 0
+        ? cellText(row[columns.supervisor])
+        : "";
+
+    const titleCell =
+      columns.title >= 0 ? cellText(row[columns.title]) : "";
+
+    const technologiesCell =
+      columns.technologies >= 0
+        ? cellText(row[columns.technologies])
+        : "";
+
+    const descriptionCell =
+      columns.description >= 0
+        ? cellText(row[columns.description])
+        : "";
 
     if (groupCell) previousGroup = groupCell;
     if (supervisorCell) previousSupervisor = supervisorCell;
     if (titleCell) previousTitle = titleCell;
+    if (technologiesCell) previousTechnologies = technologiesCell;
+    if (descriptionCell) previousDescription = descriptionCell;
 
-    if (!sapId && !name && !groupCell && !supervisorCell && !titleCell) {
+    if (
+      !sapId &&
+      !name &&
+      !groupCell &&
+      !supervisorCell &&
+      !titleCell &&
+      !technologiesCell &&
+      !descriptionCell
+    ) {
       continue;
     }
 
@@ -107,23 +163,31 @@ function parseWorkbook(buffer: ArrayBuffer) {
       issues.push("Invalid SAP ID format");
     }
 
-    if (!name) issues.push("Missing student name");
+    if (!name) {
+      issues.push("Missing student name");
+    }
 
     rows.push({
       sapId,
       name,
-      email: columns.email >= 0 ? cellText(row[columns.email]) : "",
-      contactNo: columns.contact >= 0 ? cellText(row[columns.contact]) : "",
+      email:
+        columns.email >= 0 ? cellText(row[columns.email]) : "",
+      contactNo:
+        columns.contact >= 0 ? cellText(row[columns.contact]) : "",
       groupName: previousGroup,
       supervisor: previousSupervisor,
       projectTitle: previousTitle,
+      technologies: previousTechnologies,
+      projectDescription: previousDescription,
       excelRow: i + 1,
       issues,
       valid: issues.length === 0,
     });
   }
 
-  if (!rows.length) throw new Error("Excel file mein student records nahi mile.");
+  if (!rows.length) {
+    throw new Error("Excel file mein student records nahi mile.");
+  }
 
   return rows;
 }
@@ -418,3 +482,246 @@ export async function GET() {
   }
 }
 
+export async function PATCH(req: Request) {
+  try {
+    const session = await getSession();
+
+    if (!session || session.role !== "coordinator") {
+      return NextResponse.json(
+        { error: "Only coordinators can edit faculty records." },
+        { status: 403 }
+      );
+    }
+
+    const { data: account, error: accountError } = await db()
+      .from("accounts")
+      .select("data")
+      .eq("email", session.email)
+      .maybeSingle();
+
+    if (accountError || !account) {
+      return NextResponse.json(
+        { error: "Coordinator account could not be verified." },
+        { status: 403 }
+      );
+    }
+
+    const profile = account.data ?? {};
+
+    if (
+      profile.coordinatorLevel !== "faculty" ||
+      !["SE", "CA", "CS"].includes(profile.department)
+    ) {
+      return NextResponse.json(
+        { error: "Only Faculty Coordinators can edit these records." },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
+    const { uploadId, excelRow } = body;
+
+    const allowedFields = [
+      "contactNo",
+      "groupName",
+      "supervisor",
+      "projectTitle",
+      "technologies",
+      "projectDescription",
+    ];
+
+    const suppliedFields = Object.keys(body).filter(
+      (key) => !["uploadId", "excelRow"].includes(key)
+    );
+
+    if (
+      !uploadId ||
+      !Number.isInteger(excelRow) ||
+      suppliedFields.length === 0 ||
+      suppliedFields.some((key) => !allowedFields.includes(key))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid edit request. SAP ID, student name and email cannot be changed.",
+        },
+        { status: 400 }
+      );
+    }
+
+    for (const field of suppliedFields) {
+      if (
+        typeof body[field] !== "string" ||
+        body[field].length > 5000
+      ) {
+        return NextResponse.json(
+          { error: `Invalid value for ${field}.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const database = db();
+
+    const { data: record, error: readError } = await database
+      .from("records")
+      .select("value")
+      .eq("key", STORAGE_KEY)
+      .maybeSingle();
+
+    if (readError) throw readError;
+
+    const uploads = Array.isArray(record?.value) ? record.value : [];
+
+    const upload = uploads.find(
+      (item: any) =>
+        item.id === uploadId &&
+        item.department === profile.department &&
+        item.status !== "Superseded" &&
+        (profile.phase === "All" || item.phase === profile.phase)
+    );
+
+    if (!upload) {
+      return NextResponse.json(
+        { error: "Upload not found or you do not have permission to edit it." },
+        { status: 404 }
+      );
+    }
+
+    const rowIndex = upload.rows.findIndex(
+      (row: any) => row.excelRow === excelRow
+    );
+
+    if (rowIndex === -1) {
+      return NextResponse.json(
+        { error: "Student record not found." },
+        { status: 404 }
+      );
+    }
+
+    const oldRow = upload.rows[rowIndex];
+    const oldGroupName = String(oldRow.groupName ?? "").trim();
+
+    const review = upload.groupReviews?.[oldGroupName];
+    const reviewed =
+      review === "Approved" ||
+      review === "Rejected" ||
+      review?.status === "Approved" ||
+      review?.status === "Rejected";
+
+    const groupFields = [
+      "groupName",
+      "supervisor",
+      "projectTitle",
+      "technologies",
+      "projectDescription",
+    ];
+
+    const suppliedGroupFields = suppliedFields.filter((field) =>
+      groupFields.includes(field)
+    );
+
+    if (reviewed && suppliedGroupFields.includes("groupName")) {
+      return NextResponse.json(
+        {
+          error:
+            "Group Name cannot be changed after group review. Contact Admin for this correction.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const timestamp = new Date().toISOString();
+    const groupRows = upload.rows.filter(
+      (row: any) =>
+        String(row.groupName ?? "").trim() === oldGroupName
+    );
+
+    const affectedRows =
+      suppliedGroupFields.length > 0 ? groupRows : [oldRow];
+
+    for (const row of affectedRows) {
+      const rowFields =
+        row.excelRow === excelRow
+          ? suppliedFields
+          : suppliedGroupFields;
+
+      const changes = Object.fromEntries(
+        rowFields.map((field) => [field, body[field].trim()])
+      );
+
+      Object.assign(row, changes);
+
+      row.lastEditedAt = timestamp;
+      row.lastEditedBy = session.email;
+      row.editedFields = [
+        ...new Set([
+          ...(Array.isArray(row.editedFields) ? row.editedFields : []),
+          ...rowFields,
+        ]),
+      ];
+    }
+
+    const updatedRow = upload.rows[rowIndex];
+
+    const updatedUploads = uploads.map((item: any) =>
+      item.id === uploadId ? upload : item
+    );
+
+    const { error: saveError } = await database
+      .from("records")
+      .upsert({
+        key: STORAGE_KEY,
+        value: updatedUploads,
+        updated_at: timestamp,
+      });
+
+    if (saveError) throw saveError;
+
+    const changedScope =
+      suppliedGroupFields.length > 0
+        ? `Group-wide update applied to ${affectedRows.length} student records`
+        : "Individual student record updated";
+
+    const notificationMessage =
+      `${profile.department} Faculty Coordinator ${session.email}: ` +
+      `${changedScope} in group ${oldGroupName || "Unassigned"}. ` +
+      `Changed fields: ${suppliedFields.join(", ")}.` +
+      (reviewed
+        ? " This group was already reviewed; Admin should review the updated record."
+        : "");
+
+    const { error: notificationError } = await database
+      .from("faculty_upload_notifications")
+      .insert({
+        title: "Faculty Student Record Updated",
+        message: notificationMessage,
+        upload_id: uploadId,
+        read: false,
+      });
+
+    if (notificationError) {
+      console.error("Faculty update notification failed:", notificationError);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message:
+        suppliedGroupFields.length > 0
+          ? `Group details updated for ${affectedRows.length} students.`
+          : "Student contact details updated successfully.",
+      row: updatedRow,
+      affectedRows: affectedRows.length,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not update student record.",
+      },
+      { status: 500 }
+    );
+  }
+}

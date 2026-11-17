@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -7,8 +8,16 @@ type StudentRow = {
   name?: string;
   email?: string;
   contactNo?: string;
+  groupName?: string;
+  supervisor?: string;
+  projectTitle?: string;
+  technologies?: string;
+  projectDescription?: string;
   issues?: string[];
   excelRow?: number;
+  lastEditedAt?: string;
+  lastEditedBy?: string;
+  editedFields?: string[];
 };
 
 type Group = {
@@ -16,6 +25,7 @@ type Group = {
   rows: StudentRow[];
   studentCount: number;
   status: string;
+  reviewedAt?: string | null;
   issues: string[];
   canApprove: boolean;
 };
@@ -48,6 +58,7 @@ export default function SDPReviewPage() {
       const response = await fetch("/api/admin/sdp-review", {
         cache: "no-store",
       });
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -83,13 +94,20 @@ export default function SDPReviewPage() {
       return;
     }
 
-    setBusy(`${uploadId}-${groupName}`);
+    const actionKey = `${uploadId}-${groupName}`;
+    setBusy(actionKey);
 
     try {
       const response = await fetch("/api/admin/sdp-review", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId, groupName, decision }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uploadId,
+          groupName,
+          decision,
+        }),
       });
 
       const data = await response.json();
@@ -97,6 +115,13 @@ export default function SDPReviewPage() {
       if (!response.ok) {
         throw new Error(data.error || "Review action failed.");
       }
+
+      window.alert(
+        data.message ||
+          (decision === "Approved"
+            ? "Group approved successfully."
+            : "Group rejected successfully.")
+      );
 
       await loadUploads();
     } catch (err) {
@@ -114,15 +139,16 @@ export default function SDPReviewPage() {
         <div>
           <h1 className="text-2xl font-bold">SDP Group Review</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Faculty Excel uploads aur student groups review karein.
+            Faculty Excel uploads aur complete student groups review karein.
           </p>
         </div>
 
         <button
           onClick={loadUploads}
-          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+          disabled={loading}
+          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
         >
-          Refresh
+          {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
 
@@ -150,9 +176,11 @@ export default function SDPReviewPage() {
                   <h2 className="text-lg font-semibold">
                     {upload.department} — {upload.phase}
                   </h2>
+
                   <p className="text-sm text-gray-500">
                     {upload.fileName} · Uploaded by {upload.uploadedBy}
                   </p>
+
                   <p className="text-xs text-gray-400 mt-1">
                     {upload.uploadedAt
                       ? new Date(upload.uploadedAt).toLocaleString()
@@ -170,6 +198,7 @@ export default function SDPReviewPage() {
               <div className="space-y-4">
                 {upload.groups.map((group) => {
                   const actionKey = `${upload.id}-${group.groupName}`;
+
                   const reviewed = ["Approved", "Rejected"].includes(
                     group.status
                   );
@@ -209,8 +238,16 @@ export default function SDPReviewPage() {
                               <th className="py-2 pr-3">SAP ID</th>
                               <th className="py-2 pr-3">Student Name</th>
                               <th className="py-2 pr-3">Email</th>
+                              <th className="py-2 pr-3">Contact No</th>
+                              <th className="py-2 pr-3">Group</th>
+                              <th className="py-2 pr-3">Supervisor</th>
+                              <th className="py-2 pr-3">Project Title</th>
+                              <th className="py-2 pr-3">Technologies / Tools</th>
+<th className="py-2 pr-3">Project Description</th>
+                              <th className="py-2 pr-3">Edit History</th>
                             </tr>
                           </thead>
+
                           <tbody>
                             {group.rows.map((student, index) => (
                               <tr
@@ -220,11 +257,68 @@ export default function SDPReviewPage() {
                                 <td className="py-2 pr-3">
                                   {student.sapId || "Missing"}
                                 </td>
+
                                 <td className="py-2 pr-3">
                                   {student.name || "Missing"}
                                 </td>
+
                                 <td className="py-2 pr-3">
                                   {student.email || "—"}
+                                </td>
+
+                                <td className="py-2 pr-3">
+                                  {student.contactNo || "—"}
+                                </td>
+
+                                <td className="py-2 pr-3">
+                                  {student.groupName || "—"}
+                                </td>
+
+                                <td className="py-2 pr-3">
+                                  {student.supervisor || "—"}
+                                </td>
+
+                                <td className="py-2 pr-3">
+                                  {student.projectTitle || "—"}
+                                </td>
+
+                                <td className="py-2 pr-3">
+  {student.technologies || "—"}
+</td>
+
+<td className="py-2 pr-3 min-w-64 whitespace-normal">
+  {student.projectDescription || "—"}
+</td>
+
+                                <td className="py-2 pr-3">
+                                  {student.lastEditedAt ? (
+                                    <div className="min-w-40">
+                                      <span className="font-medium text-blue-700">
+                                        Updated by Faculty
+                                      </span>
+
+                                      <p className="text-xs text-gray-500">
+                                        {student.lastEditedBy ||
+                                          "Faculty Coordinator"}
+                                      </p>
+
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(
+                                          student.lastEditedAt
+                                        ).toLocaleString()}
+                                      </p>
+
+                                      <p className="text-xs text-gray-600">
+                                        Fields:{" "}
+                                        {student.editedFields?.join(", ") ||
+                                          "Updated"}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400">
+                                      No edits
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -237,6 +331,7 @@ export default function SDPReviewPage() {
                           <p className="font-semibold mb-1">
                             Issues — approval blocked
                           </p>
+
                           <ul className="list-disc pl-5">
                             {group.issues.map((issue, index) => (
                               <li key={index}>{issue}</li>
@@ -274,9 +369,18 @@ export default function SDPReviewPage() {
                             }
                             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
                           >
-                            Reject Group
+                            {busy === actionKey
+                              ? "Processing..."
+                              : "Reject Group"}
                           </button>
                         </div>
+                      )}
+
+                      {reviewed && group.reviewedAt && (
+                        <p className="text-xs text-gray-500">
+                          Reviewed:{" "}
+                          {new Date(group.reviewedAt).toLocaleString()}
+                        </p>
                       )}
                     </div>
                   );

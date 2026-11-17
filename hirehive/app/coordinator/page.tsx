@@ -19,6 +19,11 @@ interface FacultyUploadRow {
   groupName: string;
   supervisor: string;
   projectTitle: string;
+  technologies: string;
+  projectDescription: string;
+  lastEditedAt?: string;
+  lastEditedBy?: string;
+  editedFields?: string[];
 }
 
 interface FacultyUpload {
@@ -205,6 +210,8 @@ export default function CoordinatorDashboard() {
   setSavingStudent(true);
   setUploadListError("");
 
+  const originalGroupName = editingStudent.row.groupName;
+
   try {
     const response = await fetch("/api/faculty-upload", {
       method: "PATCH",
@@ -218,6 +225,8 @@ export default function CoordinatorDashboard() {
         groupName: editingStudent.row.groupName,
         supervisor: editingStudent.row.supervisor,
         projectTitle: editingStudent.row.projectTitle,
+        technologies: editingStudent.row.technologies,
+        projectDescription: editingStudent.row.projectDescription,
       }),
     });
 
@@ -227,23 +236,61 @@ export default function CoordinatorDashboard() {
       throw new Error(result.error || "Unable to update student.");
     }
 
+    const updatedGroupFields = {
+      groupName: editingStudent.row.groupName,
+      supervisor: editingStudent.row.supervisor,
+      projectTitle: editingStudent.row.projectTitle,
+      technologies: editingStudent.row.technologies,
+      projectDescription: editingStudent.row.projectDescription,
+      lastEditedAt: new Date().toISOString(),
+      lastEditedBy: user?.email || "",
+    };
+
     setFacultyUploads((previous) =>
       previous.map((upload) =>
         upload.id === editingStudent.uploadId
           ? {
               ...upload,
-              rows: upload.rows.map((row) =>
-                row.excelRow === editingStudent.row.excelRow
-                  ? { ...row, ...editingStudent.row }
-                  : row
-              ),
+              rows: upload.rows.map((row) => {
+                const sameGroup =
+                  String(row.groupName || "").trim() ===
+                  String(originalGroupName || "").trim();
+
+                if (!sameGroup) return row;
+
+                const updatedRow = {
+                  ...row,
+                  ...updatedGroupFields,
+                  editedFields: [
+                    ...new Set([
+                      ...(row.editedFields || []),
+                      "groupName",
+                      "supervisor",
+                      "projectTitle",
+                      "technologies",
+                      "projectDescription",
+                    ]),
+                  ],
+                };
+
+                if (row.excelRow === editingStudent.row.excelRow) {
+                  return {
+                    ...updatedRow,
+                    contactNo: editingStudent.row.contactNo,
+                  };
+                }
+
+                return updatedRow;
+              }),
             }
           : upload
       )
     );
 
     setEditingStudent(null);
-    setUploadResult("Student details updated successfully.");
+    setUploadResult(
+      result.message || "Student and group details updated successfully."
+    );
   } catch (error) {
     setUploadListError(
       error instanceof Error ? error.message : "Unable to update student."
@@ -366,120 +413,118 @@ export default function CoordinatorDashboard() {
 
             {user.coordinatorLevel === "faculty" && editingStudent && (
         <Card title="Edit Student Details">
-          <form onSubmit={handleSaveStudent} className="space-y-4">
-            <div className="rounded-lg bg-soft p-3">
-              <p className="font-semibold">{editingStudent.row.name}</p>
-              <p className="text-sm text-muted">
-                SAP ID: {editingStudent.row.sapId} · {editingStudent.row.email}
-              </p>
-              <p className="text-xs text-muted">
-                Student Name, SAP ID and Email cannot be changed.
-              </p>
-            </div>
+  <form onSubmit={handleSaveStudent} className="space-y-4">
+    <div className="rounded-lg bg-soft p-3">
+      <p className="font-semibold">{editingStudent.row.name}</p>
+      <p className="text-sm text-muted">
+        SAP ID: {editingStudent.row.sapId} · {editingStudent.row.email}
+      </p>
+      <p className="text-xs text-muted">
+        Student Name, SAP ID and Email cannot be changed.
+      </p>
+    </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                Contact Number
-              </label>
-              <input
-                type="text"
-                value={editingStudent.row.contactNo || ""}
-                onChange={(e) =>
-                  setEditingStudent((current) =>
-                    current
-                      ? {
-                          ...current,
-                          row: { ...current.row, contactNo: e.target.value },
-                        }
-                      : current
-                  )
+    <div>
+      <label className="mb-1 block text-sm font-medium">
+        Contact Number
+      </label>
+      <p className="mb-2 text-xs text-muted">
+        Applies to this student only.
+      </p>
+      <input
+        type="text"
+        value={editingStudent.row.contactNo || ""}
+        onChange={(e) =>
+          setEditingStudent((current) =>
+            current
+              ? {
+                  ...current,
+                  row: { ...current.row, contactNo: e.target.value },
                 }
-                className="w-full rounded-lg border border-line p-3 text-sm"
-              />
-            </div>
+              : current
+          )
+        }
+        className="w-full rounded-lg border border-line p-3 text-sm"
+      />
+    </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                Group Name
-              </label>
-              <input
-                type="text"
-                value={editingStudent.row.groupName || ""}
-                onChange={(e) =>
-                  setEditingStudent((current) =>
-                    current
-                      ? {
-                          ...current,
-                          row: { ...current.row, groupName: e.target.value },
-                        }
-                      : current
-                  )
+    {(
+      [
+        ["groupName", "Group Name"],
+        ["supervisor", "Supervisor Name"],
+        ["projectTitle", "Project Title"],
+        ["technologies", "Technologies / Tools"],
+      ] as const
+    ).map(([field, label]) => (
+      <div key={field}>
+        <label className="mb-1 block text-sm font-medium">{label}</label>
+        <p className="mb-2 text-xs text-muted">
+          Applies to all students in this group.
+        </p>
+        <input
+          type="text"
+          value={editingStudent.row[field] || ""}
+          onChange={(e) =>
+            setEditingStudent((current) =>
+              current
+                ? {
+                    ...current,
+                    row: { ...current.row, [field]: e.target.value },
+                  }
+                : current
+            )
+          }
+          className="w-full rounded-lg border border-line p-3 text-sm"
+        />
+      </div>
+    ))}
+
+    <div>
+      <label className="mb-1 block text-sm font-medium">
+        Project Description
+      </label>
+      <p className="mb-2 text-xs text-muted">
+        Applies to all students in this group.
+      </p>
+      <textarea
+        rows={5}
+        value={editingStudent.row.projectDescription || ""}
+        onChange={(e) =>
+          setEditingStudent((current) =>
+            current
+              ? {
+                  ...current,
+                  row: {
+                    ...current.row,
+                    projectDescription: e.target.value,
+                  },
                 }
-                className="w-full rounded-lg border border-line p-3 text-sm"
-              />
-            </div>
+              : current
+          )
+        }
+        className="w-full rounded-lg border border-line p-3 text-sm"
+      />
+    </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                Supervisor Name
-              </label>
-              <input
-                type="text"
-                value={editingStudent.row.supervisor || ""}
-                onChange={(e) =>
-                  setEditingStudent((current) =>
-                    current
-                      ? {
-                          ...current,
-                          row: { ...current.row, supervisor: e.target.value },
-                        }
-                      : current
-                  )
-                }
-                className="w-full rounded-lg border border-line p-3 text-sm"
-              />
-            </div>
+    <div className="flex gap-3">
+      <button
+        type="button"
+        onClick={() => setEditingStudent(null)}
+        className="rounded-lg border border-line px-4 py-2 text-sm"
+      >
+        Cancel
+      </button>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                Project Title
-              </label>
-              <input
-                type="text"
-                value={editingStudent.row.projectTitle || ""}
-                onChange={(e) =>
-                  setEditingStudent((current) =>
-                    current
-                      ? {
-                          ...current,
-                          row: { ...current.row, projectTitle: e.target.value },
-                        }
-                      : current
-                  )
-                }
-                className="w-full rounded-lg border border-line p-3 text-sm"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                className="rounded-lg border border-line px-4 py-2 text-sm"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                disabled={savingStudent}
-                className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {savingStudent ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
-        </Card>
+      <button
+        type="submit"
+        disabled={savingStudent}
+        className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+      >
+        {savingStudent ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+  </form>
+</Card>
       )}
 
       {user.coordinatorLevel === "faculty" && (
@@ -560,11 +605,17 @@ export default function CoordinatorDashboard() {
                               Supervisor: {student.supervisor || "Not assigned"}
                             </p>
                             <p className="text-sm">
-                              Project: {student.projectTitle || "Not assigned"}
-                            </p>
-                            <p className="text-sm">
-                              Contact: {student.contactNo || "Not supplied"}
-                            </p>
+  Project: {student.projectTitle || "Not assigned"}
+</p>
+<p className="text-sm">
+  Technologies / Tools: {student.technologies || "Not supplied"}
+</p>
+<p className="text-sm">
+  Project Description: {student.projectDescription || "Not supplied"}
+</p>
+<p className="text-sm">
+  Contact: {student.contactNo || "Not supplied"}
+</p>
                           </div>
 
                           <button

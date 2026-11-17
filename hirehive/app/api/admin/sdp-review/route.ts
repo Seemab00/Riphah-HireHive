@@ -237,16 +237,18 @@ export async function PATCH(req: Request) {
           ),
           must_change_password: true,
           data: {
-            sapId: sapIds[index],
-            department: upload.department,
-            faculty: upload.department,
-            program: upload.department,
-            phase: upload.phase,
-            groupName,
-            supervisor: row.supervisor || "",
-            projectTitle: row.projectTitle || "",
-            contactNo: row.contactNo || "",
-          },
+  sapId: sapIds[index],
+  department: upload.department,
+  faculty: upload.department,
+  program: upload.department,
+  phase: upload.phase,
+  groupName,
+  supervisor: row.supervisor || "",
+  projectTitle: row.projectTitle || "",
+  technologies: row.technologies || "",
+  projectDescription: row.projectDescription || "",
+  contactNo: row.contactNo || "",
+},
         }))
       );
 
