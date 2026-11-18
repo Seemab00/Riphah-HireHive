@@ -168,7 +168,12 @@ async function markAsRead(id: string) {
 
   return (
     <RoleGuard role="company">
-      <TopBar links={[{ label: "Projects", href: "/company" }]} />
+      <TopBar
+        links={[
+          { label: "Projects", href: "/company" },
+          { label: "Approved FYP Projects", href: "/company/projects" },
+        ]}
+      />
       <main className="space-y-6 p-6 md:px-12">
         <div>
           <h1 className="text-3xl font-bold">FYP projects</h1>
