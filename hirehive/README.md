@@ -1,4 +1,4 @@
-# Riphah HireHive — enhanced front-end prototype
+# Riphah HireHive: Enhanced front-end prototype
 
 Next.js 14 + React 18 + TypeScript + Tailwind CSS. This package extends the existing front-end showcase and reuses its existing dependencies and browser-local data model.
 
@@ -22,7 +22,7 @@ Next.js 14 + React 18 + TypeScript + Tailwind CSS. This package extends the exis
 - Student/FYP profile editing and CV upload/visibility controls. The demo stores CV files (up to 2 MB) as browser-local data URLs, and companies can see only CVs whose owner enabled visibility.
 - FYP team registration/approval and template submission status tracking for Proposal, Quarterly Report, Final Report, and Poster.
 - Transparent rules-based team suggestion prototype (not a live AI model).
-- Volunteer selection workflow: FYP Student Coordinator → Faculty Coordinator → Primary FYP Incharge/Admin final decision; status and stage decisions are tracked.
+- Volunteer selection workflow: FYP Student Coordinator review, Faculty Coordinator review, and a final decision by the Primary FYP Incharge/Admin; status and stage decisions are tracked.
 - Selection email is prepared through a `mailto:` link; the app does not send email by itself.
 - Existing event setup, table allocation, printable tags, and LCD request/issue/return reporting are retained.
 - QR check-in design page supports manual demo check-in only; it does not scan or validate actual QR codes.

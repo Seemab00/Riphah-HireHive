@@ -39,7 +39,7 @@ export default function LabHome() {
           <div className="space-y-3">
             {pending.map((l) => (
               <div key={l.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-sm">
-                <span><b>{l.teamTitle}</b> · {l.reason}</span>
+                <span><b>{l.teamTitle}:</b> {l.reason}</span>
                 <div className="flex gap-2">
                   <button onClick={() => change(l.id, { status: "Approved" as Status })} className="rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white">
                     Approve

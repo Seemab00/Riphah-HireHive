@@ -62,7 +62,7 @@ export default function SDPReviewPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Uploads load nahi ho sake.");
+        throw new Error(data.error || "Could not load uploads.");
       }
 
       setUploads(data.uploads || []);
@@ -88,7 +88,7 @@ export default function SDPReviewPage() {
 
     if (
       !window.confirm(
-        `Kya aap poore group "${groupName}" ko ${action} karna chahte hain?`
+        `Are you sure you want to ${action} the entire group "${groupName}"?`
       )
     ) {
       return;
@@ -133,13 +133,104 @@ export default function SDPReviewPage() {
     }
   }
 
+  async function syncGroup(uploadId: string, groupName: string) {
+    if (
+      !window.confirm(
+        `Sync the five approved project/group fields for existing student accounts in "${groupName}"? Accounts are matched by SAP ID; no accounts will be created.`
+      )
+    ) {
+      return;
+    }
+
+    const actionKey = `sync-${uploadId}-${groupName}`;
+    setBusy(actionKey);
+
+    try {
+      const response = await fetch("/api/admin/sdp-review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ uploadId, groupName }),
+      });
+      const data = await response.json();
+      const summary = [
+        `Accounts updated: ${data.updatedAccountCount ?? 0}`,
+        `Already up to date: ${data.unchangedAccountCount ?? 0}`,
+        `Unmatched students: ${data.unmatchedStudents?.length ?? 0}`,
+      ];
+
+      if (
+        Array.isArray(data.unmatchedStudents) &&
+        data.unmatchedStudents.length
+      ) {
+        summary.push(
+          `Unmatched: ${data.unmatchedStudents
+            .map(
+              (student: { name?: string; sapId?: string; reason?: string }) =>
+                `${student.name || "Unknown"} (SAP ${student.sapId || "—"}): ${
+                  student.reason || "Not synchronized"
+                }`
+            )
+            .join("; ")}`
+        );
+      }
+
+      if (Array.isArray(data.invalidStudents) && data.invalidStudents.length) {
+        summary.push(
+          `Invalid SAP IDs: ${data.invalidStudents
+            .map(
+              (student: { name?: string; sapId?: string }) =>
+                `${student.name || "Unknown"} (SAP ${student.sapId || "—"})`
+            )
+            .join("; ")}`
+        );
+      }
+
+      if (
+        Array.isArray(data.duplicateSapIds) &&
+        data.duplicateSapIds.length
+      ) {
+        summary.push(`Duplicate SAP IDs: ${data.duplicateSapIds.join(", ")}`);
+      }
+
+      if (Array.isArray(data.failedStudents) && data.failedStudents.length) {
+        summary.push(
+          `Failed: ${data.failedStudents
+            .map(
+              (student: { name?: string; sapId?: string; reason?: string }) =>
+                `${student.name || "Unknown"} (SAP ${student.sapId || "—"}): ${
+                  student.reason || "Update failed"
+                }`
+            )
+            .join("; ")}`
+        );
+      }
+
+      if (data.error) summary.unshift(data.error);
+      window.alert(summary.join("\n"));
+
+      if (response.ok || data.updatedAccountCount) {
+        await loadUploads();
+      }
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Could not synchronize this group."
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
   return (
     <main className="p-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">SDP Group Review</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Faculty Excel uploads aur complete student groups review karein.
+            Review faculty Excel uploads and complete student groups.
           </p>
         </div>
 
@@ -159,10 +250,10 @@ export default function SDPReviewPage() {
       )}
 
       {loading ? (
-        <p>Uploads load ho rahe hain...</p>
+        <p>Loading uploads...</p>
       ) : uploads.length === 0 ? (
         <div className="rounded-xl border p-8 text-center text-gray-500">
-          Abhi koi faculty upload available nahi hai.
+          No faculty uploads are available yet.
         </div>
       ) : (
         <div className="space-y-6">
@@ -174,11 +265,11 @@ export default function SDPReviewPage() {
               <div className="flex flex-wrap justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">
-                    {upload.department} — {upload.phase}
+                    Department: {upload.department}, Phase: {upload.phase}
                   </h2>
 
                   <p className="text-sm text-gray-500">
-                    {upload.fileName} · Uploaded by {upload.uploadedBy}
+                    {upload.fileName}, uploaded by {upload.uploadedBy}
                   </p>
 
                   <p className="text-xs text-gray-400 mt-1">
@@ -329,7 +420,7 @@ export default function SDPReviewPage() {
                       {group.issues.length > 0 && (
                         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
                           <p className="font-semibold mb-1">
-                            Issues — approval blocked
+                            Issues: approval blocked
                           </p>
 
                           <ul className="list-disc pl-5">
@@ -372,6 +463,22 @@ export default function SDPReviewPage() {
                             {busy === actionKey
                               ? "Processing..."
                               : "Reject Group"}
+                          </button>
+                        </div>
+                      )}
+
+                      {group.status === "Approved" && (
+                        <div className="pt-2">
+                          <button
+                            disabled={!!busy}
+                            onClick={() =>
+                              syncGroup(upload.id, group.groupName)
+                            }
+                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                          >
+                            {busy === `sync-${actionKey}`
+                              ? "Syncing..."
+                              : "Sync Existing Student Accounts"}
                           </button>
                         </div>
                       )}

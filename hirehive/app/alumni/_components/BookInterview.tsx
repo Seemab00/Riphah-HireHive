@@ -79,7 +79,9 @@ export default function BookInterview({
               <p className="text-base font-bold">{team.title}</p>
               <Chip color="teal">{team.program}</Chip>
             </div>
-            <p className="mt-1 text-muted">Technology: {team.technology} · Supervisor: {team.supervisor}</p>
+            <p className="mt-1 text-muted">
+              Technology: {team.technology}, Supervisor: {team.supervisor}
+            </p>
 
             <div className="mt-3 space-y-2">
               {team.members.map((member, index) => {
@@ -115,7 +117,7 @@ export default function BookInterview({
           ) : (
             <>
               <p className="mb-3 text-xs text-muted">
-                {session.date} · {session.venue} · {session.slotMinutes} minutes each
+                {session.date}, {session.venue}, {session.slotMinutes} minutes each
               </p>
               <div className="flex flex-wrap gap-2">
                 {session.slots.map((slot) => {

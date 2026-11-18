@@ -67,7 +67,9 @@ export default function OverallFeedback({
           <div className="space-y-3">
             {mine.map((f) => (
               <div key={f.id} className="rounded-lg bg-surface p-4 text-sm">
-                <p className="font-semibold text-brand">{f.rating} / 5 · {f.date}</p>
+                <p className="font-semibold text-brand">
+                  Rating: {f.rating} / 5, {f.date}
+                </p>
                 <p className="mt-1">{f.comment}</p>
               </div>
             ))}

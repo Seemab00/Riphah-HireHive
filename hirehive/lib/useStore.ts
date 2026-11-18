@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Pehle jaisa hi: const [value, update, loaded] = useStore<T>(key, initial);
-// Ab data browser me nahi, database me hai: GET/PUT /api/data/[key].
+// Usage remains unchanged: const [value, update, loaded] = useStore<T>(key, initial).
+// Data is now stored in the database instead of the browser: GET/PUT /api/data/[key].
 //
-// Internet na ho ya demo fallback chahiye to .env.local me NEXT_PUBLIC_STORE_MODE=local likho:
-// tab purani localStorage wali tarah chalta hai.
+// To use the local demo fallback when offline, set NEXT_PUBLIC_STORE_MODE=local in .env.local.
+// The store will then use localStorage as before.
 const LOCAL = process.env.NEXT_PUBLIC_STORE_MODE === "local";
 
 export function useStore<T>(key: string, initial: T) {
@@ -27,7 +27,7 @@ export function useStore<T>(key: string, initial: T) {
             const { value: v } = await res.json();
             if (v !== null && v !== undefined && !cancelled) setValue(v as T);
           }
-          // 401 (login nahi) ya error: initial value rehti hai, page crash nahi hota.
+          // On 401 (not signed in) or another error, keep the initial value and avoid crashing the page.
         }
       } catch (e) {
         console.error("useStore load failed:", key, e);
@@ -38,7 +38,7 @@ export function useStore<T>(key: string, initial: T) {
     return () => { cancelled = true; };
   }, [key]);
 
-  // Page par foran badlo (optimistic), phir database me save karo.
+  // Update the page immediately (optimistically), then save to the database.
   function update(next: T) {
     setValue(next);
     if (LOCAL) {
@@ -54,7 +54,7 @@ export function useStore<T>(key: string, initial: T) {
         if (!res.ok) {
           const msg = (await res.json().catch(() => ({}))).error ?? res.statusText;
           console.error("useStore save failed:", key, msg);
-          // Save fail hua to database wali asli value wapas lao, taake screen jhooth na bole.
+          // If saving fails, restore the database value so the UI remains accurate.
           const back = await fetch(`/api/data/${key}`, { cache: "no-store" });
           if (back.ok) { const { value: v } = await back.json(); setValue((v ?? initialRef.current) as T); }
         }

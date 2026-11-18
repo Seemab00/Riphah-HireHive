@@ -44,7 +44,7 @@ function parseWorkbook(buffer: ArrayBuffer) {
   const firstSheet = workbook.SheetNames[0];
 
   if (!firstSheet) {
-    throw new Error("Excel file mein koi worksheet nahi mili.");
+    throw new Error("The Excel file does not contain a worksheet.");
   }
 
   const sheet = workbook.Sheets[firstSheet];
@@ -65,7 +65,7 @@ function parseWorkbook(buffer: ArrayBuffer) {
 
   if (headerIndex < 0) {
     throw new Error(
-      "SAP ID aur Student Name columns wali header row nahi mili."
+      "Could not find a header row with SAP ID and Student Name columns."
     );
   }
 
@@ -85,15 +85,18 @@ function parseWorkbook(buffer: ArrayBuffer) {
     supervisor: findColumn(headers, ["supervisorname", "supervisor"]),
     title: findColumn(headers, ["projecttitle", "title"]),
     technologies: findColumn(headers, [
-      "technologies",
-      "technology",
-      "technologytools",
-      "technologytool",
-      "tools",
-      "techstack",
-      "technologiesused",
-      "toolsused",
-    ]),
+  "technologies",
+  "technology",
+  "technologytools",
+  "technologytool",
+  "technologiestools",
+  "technologiestoolsused",
+  "technologytoolsused",
+  "tools",
+  "techstack",
+  "technologiesused",
+  "toolsused",
+]),
     description: findColumn(headers, [
       "projectdescription",
       "description",
@@ -186,7 +189,7 @@ function parseWorkbook(buffer: ArrayBuffer) {
   }
 
   if (!rows.length) {
-    throw new Error("Excel file mein student records nahi mile.");
+    throw new Error("No student records were found in the Excel file.");
   }
 
   return rows;
@@ -277,7 +280,7 @@ export async function POST(req: Request) {
     }
 
     const rows = parseWorkbook(await file.arrayBuffer());
-
+    console.log("Parsed Excel rows:", JSON.stringify(rows, null, 2));
     const { data: existingRecord, error: readError } = await db()
       .from("records")
       .select("value")

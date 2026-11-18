@@ -1,9 +1,9 @@
 import { Account, Role } from "./data";
 
-// Login ab server par hota hai (/api/auth/*): password bcrypt se hash, aur signed HTTP-only cookie.
-// Browser me sirf "session cache" rehta hai (account bina password ke) taake purane pages
-// jo getUser() sync istemal karte hain, bina badle chalte rahein.
-// Asli security server par hai: cache badalne se API ka access nahi milta.
+// Login is handled on the server (/api/auth/*), with bcrypt password hashing and a signed HTTP-only cookie.
+// The browser keeps only a password-free session cache so existing pages that use synchronous
+// getUser() can continue working without changes.
+// Actual security is enforced on the server; changing the cache does not grant API access.
 
 const CACHE = "hirehive_session_user";
 const LOCAL = process.env.NEXT_PUBLIC_STORE_MODE === "local";
@@ -31,13 +31,13 @@ async function post(url: string, body?: unknown, method = "POST") {
   return { ok: res.ok, json };
 }
 
-// Kuch pages ko purani list chahiye thi (sirf cache wala user). Ab accounts useStore(KEYS.accounts) se lo.
+// Some pages need the full account list rather than the cached user. Read accounts with useStore(KEYS.accounts).
 export function getAccounts(): Account[] {
   const u = readCache();
   return u ? [u] : [];
 }
 
-// Naya account (sirf student / lab / volunteer open signup). Error message ya null.
+// Create an account through open signup (student, lab, or volunteer only). Returns an error message or null.
 export async function register(account: Account): Promise<string | null> {
   const { ok, json } = await post("/api/auth/register", account);
   if (!ok) return json.error ?? "Could not create the account.";
@@ -45,7 +45,7 @@ export async function register(account: Account): Promise<string | null> {
   return null;
 }
 
-// Email + password server par check hote hain. Role account se aata hai.
+// Email and password are checked on the server. The account determines the role.
 export async function login(emailText: string, password: string): Promise<{ error?: string; account?: Account }> {
   const { ok, json } = await post("/api/auth/login", { email: emailText, password });
   if (!ok) return { error: json.error ?? "Could not sign in." };
@@ -58,7 +58,7 @@ export function getUser(): Account | null {
   return readCache();
 }
 
-// Server se asli haal (cookie valid hai ya nahi) aur cache refresh. RoleGuard isay istemal karta hai.
+// Check the server-side session and refresh the cache. RoleGuard uses this function.
 export async function refreshUser(): Promise<Account | null> {
   if (LOCAL) return readCache();
   try {
@@ -67,7 +67,7 @@ export async function refreshUser(): Promise<Account | null> {
     writeCache(account ?? null);
     return (account as Account) ?? null;
   } catch {
-    return readCache(); // internet nahi: cache par chalao
+    return readCache(); // Fall back to the cache when offline.
   }
 }
 

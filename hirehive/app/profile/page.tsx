@@ -219,8 +219,8 @@ export default function ProfilePage() {
 
           <div className="rounded-lg bg-soft p-3 text-xs text-muted">
             Role: {ROLE_LABELS[user.role]}
-            {user.department ? ` · Department: ${user.department}` : ""}
-            {user.phase ? ` · ${user.phase}` : ""}
+            {user.department ? `, Department: ${user.department}` : ""}
+            {user.phase ? `, Phase: ${user.phase}` : ""}
           </div>
 
           <div className="border-t border-line pt-4">
@@ -271,7 +271,7 @@ export default function ProfilePage() {
           />
           {user.cvName && (
             <p className="mt-3 text-sm">
-              Current CV: <b>{user.cvName}</b> · Available to approved companies
+              Current CV: <b>{user.cvName}</b>, available to approved companies
             </p>
           )}
           {!user.cvName && (

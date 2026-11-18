@@ -9,7 +9,7 @@ export default function TagCard({ team, tableNumber }: { team: Team; tableNumber
 
       <h3 className="mt-3 text-xl font-bold">{team.title}</h3>
       <p className="mt-1 text-sm text-muted">
-        {team.program} · {team.technology}
+        {team.program}, {team.technology}
       </p>
 
       <p className="mt-3 text-sm">

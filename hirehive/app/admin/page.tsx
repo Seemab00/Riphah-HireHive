@@ -178,7 +178,7 @@ async function markFacultyNotificationRead(id: string) {
 
           <p className="mt-2 text-sm text-muted">
             {event.name
-              ? `${event.name} â€¢ ${event.date} â€¢ ${event.venue}`
+              ? `${event.name}, ${event.date}, ${event.venue}`
               : "Welcome! Set up your Open House event to get started."}
           </p>
         </div>
@@ -220,7 +220,7 @@ async function markFacultyNotificationRead(id: string) {
               <p className="mt-2 text-sm text-muted">{action.description}</p>
 
               <p className="mt-4 text-sm font-semibold text-brand">
-                Open section â†’
+                Open section
               </p>
             </Link>
           ))}

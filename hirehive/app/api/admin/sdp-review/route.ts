@@ -380,3 +380,265 @@ HireHive Team`,
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  const session = await getSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  }
+
+  if (session.role !== "admin") {
+    return NextResponse.json({ error: "Not allowed." }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const uploadId =
+    typeof body?.uploadId === "string" ? body.uploadId.trim() : "";
+  const groupName =
+    typeof body?.groupName === "string" ? body.groupName.trim() : "";
+
+  if (!uploadId || !groupName) {
+    return NextResponse.json(
+      { error: "Upload and group are required." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const database = db();
+    const { data: record, error: readError } = await database
+      .from("records")
+      .select("value")
+      .eq("key", STORAGE_KEY)
+      .maybeSingle();
+
+    if (readError) throw readError;
+
+    const uploads = Array.isArray(record?.value) ? record.value : [];
+    const upload = uploads.find((item: any) => item.id === uploadId);
+
+    if (!upload || upload.status === "Superseded") {
+      return NextResponse.json(
+        { error: "Upload not found or no longer active." },
+        { status: 404 }
+      );
+    }
+
+    if (
+      !["SE", "CA", "CS"].includes(upload.department) ||
+      !["FYP1", "FYP2"].includes(upload.phase)
+    ) {
+      return NextResponse.json(
+        { error: "The upload has invalid faculty or phase details." },
+        { status: 400 }
+      );
+    }
+
+    if (upload.groupReviews?.[groupName]?.status !== "Approved") {
+      return NextResponse.json(
+        { error: "Only an approved group can be synchronized." },
+        { status: 409 }
+      );
+    }
+
+    const rows = (Array.isArray(upload.rows) ? upload.rows : []).filter(
+      (row: any) => String(row.groupName ?? "").trim() === groupName
+    );
+
+    if (!rows.length) {
+      return NextResponse.json(
+        { error: "Group not found in the selected upload." },
+        { status: 404 }
+      );
+    }
+
+    const sapIdCounts = new Map<string, number>();
+    const invalidStudents: { name: string; sapId: string }[] = [];
+
+    for (const row of rows) {
+      const sapId = String(row.sapId ?? "").trim();
+
+      if (!/^\d+$/.test(sapId)) {
+        invalidStudents.push({
+          name: String(row.name ?? "").trim(),
+          sapId,
+        });
+        continue;
+      }
+
+      sapIdCounts.set(sapId, (sapIdCounts.get(sapId) ?? 0) + 1);
+    }
+
+    const duplicateSapIds = Array.from(sapIdCounts.entries())
+      .filter(([, count]) => count > 1)
+      .map(([sapId]) => sapId);
+
+    if (invalidStudents.length || duplicateSapIds.length) {
+      return NextResponse.json(
+        {
+          error:
+            "Synchronization blocked: the approved group contains invalid or duplicate SAP IDs.",
+          invalidStudents,
+          duplicateSapIds,
+        },
+        { status: 400 }
+      );
+    }
+
+    const fields = [
+      "groupName",
+      "supervisor",
+      "projectTitle",
+      "technologies",
+      "projectDescription",
+    ] as const;
+    const unmatchedStudents: {
+      name: string;
+      sapId: string;
+      reason: string;
+    }[] = [];
+    const failedStudents: {
+      name: string;
+      sapId: string;
+      reason: string;
+    }[] = [];
+    let matchedAccountCount = 0;
+    let updatedAccountCount = 0;
+    let unchangedAccountCount = 0;
+
+    const accountLookups = await Promise.all(
+      rows.map(async (row: any) => {
+        const sapId = String(row.sapId).trim();
+        const { data, error } = await database
+          .from("accounts")
+          .select("email, role, data")
+          .eq("role", "fyp")
+          .eq("data->>sapId", sapId);
+
+        if (error) throw error;
+
+        const matchingAccounts = (data ?? []).filter((account: any) => {
+          const accountData =
+            account.data && typeof account.data === "object"
+              ? account.data
+              : {};
+
+          return (
+            String(accountData.department ?? "").trim() === upload.department &&
+            String(accountData.faculty ?? "").trim() === upload.department &&
+            String(accountData.phase ?? "").trim() === upload.phase
+          );
+        });
+
+        return { row, matchingAccounts };
+      })
+    );
+
+    for (const { row, matchingAccounts } of accountLookups) {
+      const sapId = String(row.sapId).trim();
+      const name = String(row.name ?? "").trim();
+
+      if (matchingAccounts.length !== 1) {
+        unmatchedStudents.push({
+          name,
+          sapId,
+          reason:
+            matchingAccounts.length === 0
+              ? "No existing FYP account matches this SAP ID, faculty, and phase."
+              : "More than one existing FYP account matches this SAP ID, faculty, and phase.",
+        });
+        continue;
+      }
+
+      const account = matchingAccounts[0];
+      const accountData =
+        account.data && typeof account.data === "object"
+          ? account.data
+          : {};
+      const updatedData = {
+        ...accountData,
+        groupName,
+        supervisor: String(row.supervisor ?? "").trim(),
+        projectTitle: String(row.projectTitle ?? "").trim(),
+        technologies: String(row.technologies ?? "").trim(),
+        projectDescription: String(row.projectDescription ?? "").trim(),
+      };
+      const hasChanges = fields.some(
+        (field) => accountData[field] !== updatedData[field]
+      );
+
+      matchedAccountCount += 1;
+
+      if (!hasChanges) {
+        unchangedAccountCount += 1;
+        continue;
+      }
+
+      const { data: updatedAccount, error: updateError } = await database
+        .from("accounts")
+        .update({ data: updatedData })
+        .eq("email", account.email)
+        .eq("role", "fyp")
+        .eq("data->>sapId", sapId)
+        .eq("data->>department", upload.department)
+        .eq("data->>faculty", upload.department)
+        .eq("data->>phase", upload.phase)
+        .select("email")
+        .maybeSingle();
+
+      if (updateError) {
+        console.error(
+          `FYP account sync failed for SAP ID ${sapId}:`,
+          updateError.message
+        );
+        failedStudents.push({
+          name,
+          sapId,
+          reason: "The account could not be updated.",
+        });
+        continue;
+      }
+
+      if (!updatedAccount) {
+        failedStudents.push({
+          name,
+          sapId,
+          reason: "The account was not available when the update was applied.",
+        });
+        continue;
+      }
+
+      updatedAccountCount += 1;
+    }
+
+    const hasFailures = failedStudents.length > 0;
+
+    return NextResponse.json(
+      {
+        ok: !hasFailures,
+        department: upload.department,
+        phase: upload.phase,
+        groupName,
+        matchedAccountCount,
+        updatedAccountCount,
+        unchangedAccountCount,
+        unmatchedStudents,
+        failedStudents,
+      },
+      { status: hasFailures ? 500 : 200 }
+    );
+  } catch (error) {
+    console.error("Approved FYP group synchronization failed:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not synchronize the approved group.",
+      },
+      { status: 500 }
+    );
+  }
+}

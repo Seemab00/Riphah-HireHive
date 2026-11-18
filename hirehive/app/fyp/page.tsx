@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,16 +8,28 @@ import Card from "@/components/Card";
 import EventCard from "@/components/EventCard";
 import CvCard from "@/components/CvCard";
 import FypDocuments from "@/components/FypDocuments";
-import { getUser } from "@/lib/auth";
+import FypProgress from "@/components/FypProgress";
+import FypStudentQr from "@/components/FypStudentQr";
+import FypNotifications from "@/components/FypNotifications";
+import { refreshUser } from "@/lib/auth";
 import { Account } from "@/lib/data";
 
 export default function FypHome() {
   const [student, setStudent] = useState<Account | null>(null);
 
   useEffect(() => {
-    const user = getUser();
-    if (user) setStudent(user);
-  }, []);
+  let active = true;
+
+  refreshUser().then((user) => {
+    if (active && user) {
+      setStudent(user);
+    }
+  });
+
+  return () => {
+    active = false;
+  };
+}, []);
 
   return (
     <RoleGuard role="fyp">
@@ -34,6 +46,8 @@ export default function FypHome() {
         </div>
 
         <EventCard />
+<FypStudentQr />
+<FypNotifications />
 
         <Card title="My Academic Details">
           <div className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -93,7 +107,9 @@ export default function FypHome() {
 
         <CvCard />
         <FypDocuments />
+        <FypProgress />
       </main>
     </RoleGuard>
   );
 }
+

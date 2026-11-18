@@ -1,11 +1,13 @@
-// Admin account database me daalta hai (password hash hokar).
-// Chalao:  node --env-file=.env.local scripts/seed-admin.mjs
+// Seeds the Admin account with a hashed password.
+// Run with: node --env-file=.env.local scripts/seed-admin.mjs
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL, ADMIN_NAME, ADMIN_PASSWORD } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error("SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL, ADMIN_PASSWORD .env.local me chahiye.");
+  console.error(
+    "Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL, and ADMIN_PASSWORD in .env.local."
+  );
   process.exit(1);
 }
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });

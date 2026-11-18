@@ -6,8 +6,8 @@ import { cleanEmail, splitAccount, toAccount, AccountRow } from "@/lib/server/ac
 
 export const dynamic = "force-dynamic";
 
-// Purani open signup, sirf in roles ke liye (jab tak Ma'am Regular Student / Lab ka onboarding confirm na karein).
-// Admin, coordinator, company, alumni, fyp yahan se nahi ban sakte: unka raasta invitation / /api/onboard hai.
+// Legacy open signup is limited to these roles, pending confirmation of Regular Student and Lab onboarding.
+// Admin, coordinator, company, alumni, and FYP accounts cannot be created here; use an invitation or /api/onboard.
 const OPEN_ROLES = new Set(["student", "lab", "volunteer"]);
 
 export async function POST(req: Request) {

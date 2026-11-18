@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const { email, password } = await req.json().catch(() => ({}));
   const { data } = await db().from("accounts").select("*").eq("email", cleanEmail(email)).maybeSingle();
   const row = data as AccountRow | null;
-  // Dono galtiyon par ek hi message (kisi ko ye na pata chale ke email maujood hai).
+  // Use the same message for both failures so the response does not reveal whether the email exists.
   if (!row || !password || !(await bcrypt.compare(String(password), row.password_hash))) {
     return NextResponse.json({ error: "Wrong email or password." }, { status: 401 });
   }

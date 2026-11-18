@@ -89,7 +89,7 @@ export type LcdRequest = {
 };
 
 // The open house details that the admin enters. Everyone sees them.
-export type EventInfo = { name: string; date: string; venue: string; deadline: string };
+export type EventInfo = { name: string; date: string; time: string; venue: string; description: string; deadline: string };
 export type CompanyInvitation = {
   id: string;
   companyName: string;
@@ -100,7 +100,7 @@ export type CompanyInvitation = {
   acceptedAt?: string;
   boothNumber?: string;
 };
-export const emptyEvent: EventInfo = { name: "", date: "", venue: "", deadline: "" };
+export const emptyEvent: EventInfo = { name: "", date: "", time: "", venue: "", description: "", deadline: "" };
 
 // Feedback written by an alumnus.
 export type Feedback = {
@@ -157,3 +157,4 @@ export const KEYS = {
   companyNotifications: "hirehive_company_notifications",
   volunteerNotifications: "hirehive_volunteer_notifications",
 };
+

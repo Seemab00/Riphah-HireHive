@@ -11,7 +11,7 @@ export type AccountRow = {
 
 export const cleanEmail = (e: unknown) => String(e ?? "").trim().toLowerCase();
 
-// DB row -> front-end Account (password hash kabhi nahi jata).
+// Convert a database row to a front-end Account without exposing the password hash.
 export function toAccount(
   r: AccountRow
 ): Record<string, unknown> & {

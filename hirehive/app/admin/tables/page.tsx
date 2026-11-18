@@ -77,7 +77,7 @@ export default function TablesPage() {
                       (selected && selected.id === team.id ? "bg-accent text-ink" : "bg-surface")
                     }
                   >
-                    <span>Table {tableNumbers[team.id]} · {team.title}</span>
+                    <span>Table {tableNumbers[team.id]}: {team.title}</span>
                     <span className="text-xs">{team.program}</span>
                   </button>
                 ))}

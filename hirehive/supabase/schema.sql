@@ -1,6 +1,6 @@
-﻿-- Supabase > SQL Editor me poora paste karke Run karo.
--- RLS ON hai aur koi policy nahi: browser (anon key) in tables ko chhu nahi sakta.
--- Sirf hamari Next.js API (service-role key, server par) access karti hai.
+﻿-- Paste this script into the Supabase SQL Editor and run it.
+-- RLS is enabled with no policies, so browser clients using the anon key cannot access these tables.
+-- Only the server-side Next.js API can access these tables using the service-role key.
 
 create table if not exists accounts (
   email text primary key,

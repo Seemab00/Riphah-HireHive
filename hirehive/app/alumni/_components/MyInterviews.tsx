@@ -61,11 +61,16 @@ export default function MyInterviews({
           return (
             <div key={b.id} className="rounded-lg bg-surface p-4 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-base font-bold">{b.slot} · {b.studentName} <span className="font-normal text-muted">({b.studentSap})</span></p>
+                <p className="text-base font-bold">
+                  {b.slot}, {b.studentName}{" "}
+                  <span className="font-normal text-muted">({b.studentSap})</span>
+                </p>
                 <Chip color={done ? "green" : "blue"}>{b.status}</Chip>
               </div>
               <p className="mt-1 text-muted">
-                {team ? team.title : "Team"} {session.venue && "· " + session.venue} {session.date && "· " + session.date}
+                {team ? team.title : "Team"}
+                {session.venue && `, ${session.venue}`}
+                {session.date && `, ${session.date}`}
               </p>
 
               {/* The CV of the booked student only */}
@@ -97,7 +102,8 @@ export default function MyInterviews({
               {done && (
                 <div className="mt-3 rounded-lg bg-white p-3">
                   <p className="font-semibold text-brand">
-                    Technical {b.technical}/5 · Communication {b.communication}/5 · Project explanation {b.projectExplanation}/5
+                    Technical {b.technical}/5, Communication {b.communication}/5,
+                    Project explanation {b.projectExplanation}/5
                   </p>
                   <p className="mt-1"><b>Recommendation:</b> {b.recommendation}</p>
                   <p className="mt-1">{b.comment}</p>

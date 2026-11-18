@@ -21,7 +21,7 @@ function VolunteerRow({
   return (
     <tr className="border-t border-line">
       <td className="py-3 font-semibold">{volunteer.name}</td>
-      <td>{volunteer.sapId} · {volunteer.program}</td>
+      <td>{volunteer.sapId}, {volunteer.program}</td>
       <td><Chip color={statusColor(status)}>{status}</Chip></td>
       <td>
         <div className="space-y-1 text-xs">
@@ -72,7 +72,7 @@ export default function VolunteersPage() {
             <thead className="text-xs text-muted">
               <tr>
                 <th className="py-2">Name</th>
-                <th>SAP ID · Program</th>
+                <th>SAP ID and Program</th>
                 <th>Status</th>
                 <th>Action</th>
                 <th>Placement and shift</th>

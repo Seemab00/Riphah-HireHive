@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/server/db";
 import { getSession } from "@/lib/server/session";
+import { notifyFypGroupMembers } from "@/lib/server/fyp-notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ async function getStudentGroup(email: string) {
   };
 }
 
-// GET: Apne group ke documents aur temporary download links.
+// GET: Documents for the student's group and temporary download links.
 export async function GET() {
   try {
     const session = await getSession();
@@ -224,7 +225,23 @@ export async function POST(req: Request) {
       .select("id")
       .single();
 
-    if (insertError) throw insertError;
+if (insertError) throw insertError;
+
+// Notify other members of the same FYP group.
+try {
+  await notifyFypGroupMembers({
+    actorEmail: group.email,
+    department: group.department,
+    phase: group.phase,
+    groupName: group.groupName,
+    title: "New group document uploaded",
+    message: `${group.name} uploaded a new document: ${originalName}`,
+    relatedType: "document",
+    relatedId: document.id,
+  });
+} catch (notificationError) {
+  console.error("FYP document notification error:", notificationError);
+}
 
     return NextResponse.json(
       {

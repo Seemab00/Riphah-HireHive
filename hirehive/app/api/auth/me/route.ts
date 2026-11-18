@@ -11,7 +11,7 @@ async function load(email: string) {
   return data as AccountRow | null;
 }
 
-// Kaun logged in hai?
+// Identify the signed-in user.
 export async function GET() {
   const s = await getSession();
   if (!s) return NextResponse.json({ account: null });
@@ -19,7 +19,7 @@ export async function GET() {
   return NextResponse.json({ account: row ? toAccount(row) : null });
 }
 
-// Apna profile badalna (naam, CV, password). Email aur role yahan se nahi badalte.
+// Update the user's profile (name, CV, or password). Email and role cannot be changed here.
 export async function PATCH(req: Request) {
   const s = await getSession();
   if (!s) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
@@ -33,7 +33,7 @@ export async function PATCH(req: Request) {
 
   if (body.password) {
     if (String(body.password).length < 8) return NextResponse.json({ error: "New password must have at least 8 characters." }, { status: 400 });
-    // Pehli login par (mustChangePassword) purana password dobara poochna zaroori nahi.
+    // On the first login (mustChangePassword), do not ask for the old password again.
     if (!row.must_change_password && !(await bcrypt.compare(String(body.currentPassword ?? ""), row.password_hash))) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }

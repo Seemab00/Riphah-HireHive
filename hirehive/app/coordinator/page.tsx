@@ -306,7 +306,7 @@ export default function CoordinatorDashboard() {
         <div>
           <h1 className="text-3xl font-bold">Coordinator dashboard</h1>
           <p className="mt-1 text-sm text-muted">
-            {user.name} · {label} · {user.department} · {user.phase}
+            {user.name}, {label}, {user.department}, {user.phase}
           </p>
         </div>
 
@@ -417,7 +417,7 @@ export default function CoordinatorDashboard() {
     <div className="rounded-lg bg-soft p-3">
       <p className="font-semibold">{editingStudent.row.name}</p>
       <p className="text-sm text-muted">
-        SAP ID: {editingStudent.row.sapId} · {editingStudent.row.email}
+        SAP ID: {editingStudent.row.sapId}, {editingStudent.row.email}
       </p>
       <p className="text-xs text-muted">
         Student Name, SAP ID and Email cannot be changed.
@@ -580,7 +580,7 @@ export default function CoordinatorDashboard() {
                   <div className="mb-3">
                     <p className="font-semibold">{upload.fileName}</p>
                     <p className="text-xs text-muted">
-                      {upload.totalRows} students · {upload.status}
+                      {upload.totalRows} students, {upload.status}
                     </p>
                   </div>
 
@@ -596,7 +596,7 @@ export default function CoordinatorDashboard() {
                               {student.name}
                             </p>
                             <p className="text-xs text-muted">
-                              SAP ID: {student.sapId} · {student.email}
+                              SAP ID: {student.sapId}, {student.email}
                             </p>
                             <p className="mt-1 text-sm">
                               Group: {student.groupName || "Not assigned"}
@@ -644,9 +644,10 @@ export default function CoordinatorDashboard() {
 
       <Card title="Volunteer applications awaiting your decision">
         <p className="mb-4 text-sm text-muted">
-          Workflow: Student Coordinator → Faculty Coordinator → Primary FYP
-          Incharge final decision. Recommendations move applications forward;
-          the last stage selects volunteers.
+          Workflow: The Student Coordinator reviews first, followed by the
+          Faculty Coordinator and then the Primary FYP Incharge, who makes the
+          final decision. Recommendations move applications forward; the last
+          stage selects volunteers.
         </p>
 
         <div className="space-y-3">
@@ -659,7 +660,7 @@ export default function CoordinatorDashboard() {
                 <p className="font-semibold">{v.name}</p>
 
                 <p className="text-sm text-muted">
-                  {v.email} · SAP {v.sapId || "not supplied"} ·{" "}
+                  {v.email}, SAP {v.sapId || "not supplied"},{" "}
                   {v.program || "program not supplied"}
                 </p>
 
@@ -676,7 +677,7 @@ export default function CoordinatorDashboard() {
                     "Pending",
                   ])
                     .slice(0, stage - 1)
-                    .join(" → ") || "Not reviewed"}
+                    .join(", ") || "Not reviewed"}
                 </p>
               </div>
 

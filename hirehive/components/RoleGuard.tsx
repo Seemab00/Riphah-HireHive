@@ -22,7 +22,7 @@ export default function RoleGuard({
   const [user, setUser] = useState<Account | null>(null);
 
   useEffect(() => {
-    // Server se poochho: cookie abhi bhi valid hai? (sirf browser ke cache par bharosa nahi)
+    // Verify with the server that the cookie is still valid; do not rely only on the browser cache.
     refreshUser().then((current) => {
       if (!current) {
         router.replace("/login");

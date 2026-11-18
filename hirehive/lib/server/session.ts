@@ -10,12 +10,14 @@ export type Session = { email: string; role: string };
 function secret() {
   const s = process.env.SESSION_SECRET;
   if (!s || s.length < 16) {
-    throw new Error("SESSION_SECRET .env.local me nahi hai (kam az kam 16 characters)");
+    throw new Error(
+      "SESSION_SECRET is missing from .env.local or is shorter than 16 characters."
+    );
   }
   return new TextEncoder().encode(s);
 }
 
-// Login ke baad signed, HTTP-only cookie.
+// Create a signed, HTTP-only cookie after login.
 export async function createSession(email: string, role: string) {
   const token = await new SignJWT({ email, role })
     .setProtectedHeader({ alg: "HS256" })
@@ -31,7 +33,7 @@ export async function createSession(email: string, role: string) {
   });
 }
 
-// JWT verify karne ke baad database se current role confirm hota hai.
+// Verify the JWT, then confirm the current role in the database.
 export async function getSession(): Promise<Session | null> {
   try {
     const token = cookies().get(COOKIE)?.value;

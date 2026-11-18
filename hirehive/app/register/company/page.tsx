@@ -6,7 +6,7 @@ import Field from "@/components/Field";
 import Logo from "@/components/Logo";
 import { refreshUser } from "@/lib/auth";
 
-// Company ko email me invitation link milta hai: /register/company?token=...
+// Companies receive an invitation link by email: /register/company?token=...
 function CompanyRegister() {
   const router = useRouter();
   const token = useSearchParams().get("token") ?? "";
@@ -37,7 +37,7 @@ function CompanyRegister() {
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.created?.length) { setError(json.error ?? "Could not register. This email may already have an account."); return; }
     await refreshUser();         // server ne cookie laga di, cache bhar lo
-    router.push("/company");      // company khud login ho gayi
+    router.push("/company");      // The company has signed in.
   }
 
   if (state === "checking") return null;
