@@ -47,7 +47,7 @@ function canWriteKey(role: string, key: string) {
 
 function canReadKey(role: string, key: string) {
   const permissions: Record<string, string[]> = {
-    hirehive_teams: ["admin", "fyp", "company", "alumni"],
+    hirehive_teams: ["admin", "fyp", "alumni"],
     hirehive_event: [
       "admin", "fyp", "student", "volunteer",
       "lab", "company", "alumni", "coordinator",
@@ -71,25 +71,44 @@ function visibleAccounts(s: Session, all: ReturnType<typeof toAccount>[]) {
     .filter((a) => {
       if (a.email === s.email) return true;
 
-      if (s.role === "company") {
-        return a.role === "fyp" || a.role === "student";
-      }
-
       if (s.role === "alumni") return a.role === "fyp";
 
       return false;
     })
     .map((a) => {
-      const canSeeCv =
-        a.email === s.email ||
-        (s.role === "company" &&
-          (a.role === "fyp" || a.role === "student"));
-
-      if (canSeeCv) return a;
+      if (a.email === s.email) return a;
 
       const { cvDataUrl, ...safeAccount } = a;
       return safeAccount;
     });
+}
+
+async function companyRegistrationError(s: Session) {
+  if (s.role !== "company") return null;
+
+  const { data, error } = await db()
+    .from("accounts")
+    .select("data")
+    .eq("email", s.email)
+    .eq("role", "company")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Company registration check failed:", error.message);
+    return NextResponse.json(
+      { error: "Could not verify company registration." },
+      { status: 500 }
+    );
+  }
+
+  if (data?.data?.companyStatus !== "Registered") {
+    return NextResponse.json(
+      { error: "Company registration is not valid." },
+      { status: 403 }
+    );
+  }
+
+  return null;
 }
 
 async function getOwnTeams(email: string) {
@@ -123,7 +142,14 @@ export async function GET(
     return NextResponse.json({ error: "Bad key." }, { status: 400 });
   }
 
+  const companyError = await companyRegistrationError(s);
+  if (companyError) return companyError;
+
   if (params.key === ACCOUNTS) {
+    if (s.role === "company") {
+      return NextResponse.json({ value: [] });
+    }
+
     const { data, error } = await db().from("accounts").select("*");
 
     if (error) {
@@ -252,6 +278,9 @@ export async function PUT(
     return NextResponse.json({ error: "Bad key." }, { status: 400 });
   }
 
+  const companyError = await companyRegistrationError(s);
+  if (companyError) return companyError;
+
   const body = await req.json().catch(() => null);
 
   if (!body || !("value" in body)) {
@@ -272,7 +301,7 @@ export async function PUT(
 
     const { data: existing, error: readError } = await db()
       .from("accounts")
-      .select("email, role, password_hash, must_change_password");
+      .select("email, role, password_hash, must_change_password, data");
 
     if (readError) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
@@ -287,6 +316,16 @@ export async function PUT(
       if (!email) continue;
 
       const old: any = byEmail.get(email);
+      const accountRole = old ? old.role : role;
+      let accountData = data;
+
+      if (accountRole === "company") {
+        accountData = { ...data };
+        delete accountData.companyStatus;
+        if (old?.role === "company" && old.data?.companyStatus === "Registered") {
+          accountData.companyStatus = "Registered";
+        }
+      }
 
       if (!old && role === "admin") continue;
       if (old?.role === "admin" && s.role !== "admin") continue;
@@ -300,8 +339,8 @@ export async function PUT(
       rows.push({
         email,
         name,
-        data,
-        role: old ? old.role : role,
+        data: accountData,
+        role: accountRole,
         password_hash: hash,
         must_change_password: a.password
           ? true

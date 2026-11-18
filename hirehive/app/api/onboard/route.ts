@@ -27,7 +27,12 @@ export async function POST(req: Request) {
       const { data } = await db().from("invites").select("*").eq("token", String(body.token)).maybeSingle();
       invite = data;
 
-      if (!invite || invite.used || new Date(invite.expires_at) < new Date()) {
+      if (
+        !invite ||
+        invite.role !== "company" ||
+        invite.used ||
+        new Date(invite.expires_at) < new Date()
+      ) {
         return NextResponse.json({ error: "This invitation link is invalid or expired." }, { status: 400 });
       }
 
@@ -66,6 +71,12 @@ export async function POST(req: Request) {
     const needsSetup = isAdmin;
     const plain = chosen ?? (needsSetup ? randomBytes(32).toString("hex") : generatePassword());
     const extra = role === "volunteer" ? { volunteerStatus: "Approved" } : {};
+    const accountData: Record<string, unknown> = { ...data, ...extra };
+
+    if (role === "company") {
+      delete accountData.companyStatus;
+      if (invite?.role === "company") accountData.companyStatus = "Registered";
+    }
 
     const { error } = await db().from("accounts").insert({
       email,
@@ -73,7 +84,7 @@ export async function POST(req: Request) {
       name,
       password_hash: await bcrypt.hash(plain, 10),
       must_change_password: !chosen,
-      data: { ...data, ...extra },
+      data: accountData,
     });
 
     if (error) {

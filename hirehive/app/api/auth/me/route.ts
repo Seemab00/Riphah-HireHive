@@ -28,6 +28,9 @@ export async function PATCH(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const { name, data: rest } = splitAccount({ ...body, email: row.email, role: row.role });
+  if (row.role === "company") {
+    delete rest.companyStatus;
+  }
   const update: Record<string, unknown> = { data: { ...row.data, ...rest } };
   if (typeof body.name === "string" && body.name.trim()) update.name = name;
 
